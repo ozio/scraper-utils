@@ -7,10 +7,7 @@
 
 */
 
-import fs from 'fs/promises'
-import { flag } from './flag.mjs'
 import { isValidPhone } from '../validators/isValidPhone.mjs'
-import chalk from 'chalk'
 
 const qeqLeft = {}
 const qeqRight = {}
@@ -690,45 +687,4 @@ export const guessPrice = (text) => {
 
     return t
   })
-}
-
-const jsonPath = flag('--file')
-
-if (jsonPath) {
-  const file = await fs.readFile(jsonPath, 'utf-8')
-  const json = JSON.parse(file)
-
-  /*setInterval(() => {
-    console.clear()
-
-    console.log(JSON.stringify(Object.fromEntries(Object.entries(qeqLeft)
-      .filter(([, value]) => value > 1000)), null, 2))
-
-    console.log(JSON.stringify(Object.fromEntries(Object.entries(qeqLeft)
-      .filter(([, value]) => value > 1000)), null, 2))
-  }, 1000)*/
-
-  json.records.forEach((q) => {
-    const x = guessPrice(q.comment)
-
-    if (x.length) {
-      //console.log(q.comment);
-      //console.log(x);
-      //console.log('-----');
-    }
-  })
-
-  const p = (obj) => JSON.stringify(
-    Object.fromEntries(
-      Object.entries(obj)
-        .filter(([, value]) => value > 200)
-        .sort((a, b) => b[1] - a[1])
-    )
-    , null, 2)
-
-  console.log(qeqNums);
-
-  console.log('left', p(qeqLeft))
-  console.log('right', p(qeqRight))
-  console.log('nums', p(qeqNums))
 }

@@ -1,7 +1,16 @@
-import chalk from 'chalk'
-import Table from 'cli-table'
+const chalk = require('chalk')
 
-export const printPriceTable = (prevValue, nextValue) => {
+const BLOCK_WIDTH = 5
+
+const formatNumber = (number) => {
+  return (number / 1000)
+    .toLocaleString('ru', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 1,
+    }) + 'к'
+}
+
+const printPriceTable = (prevValue, nextValue) => {
   const keys = [
     'priceDay1HIn',
     'priceDay2HIn',
@@ -16,82 +25,58 @@ export const printPriceTable = (prevValue, nextValue) => {
     'priceNightOut',
   ]
 
-  const table = new Table({
-    head: ['', '🌞', '🌞🌞', '🌚', '🌚🌚🌚', 'Анал', 'МБР', 'ОВР'].map(n => chalk.white.bold(n)),
-    chars: {
-      'top': '',
-      'top-mid': '',
-      'top-left': '',
-      'top-right': '',
-      'bottom': '',
-      'bottom-mid': '',
-      'bottom-left': '',
-      'bottom-right': '',
-      'left': '',
-      'left-mid': '',
-      'mid': '',
-      'mid-mid': '',
-      'right': '',
-      'right-mid': '',
-      'middle': ' ',
-    },
-    style: {
-      'padding-left': 0,
-      'padding-right': 0,
-    },
-    colAligns: ['right', 'right', 'right', 'right', 'right', 'right', 'right', 'right'],
-    colWidths: [5, 9, 9, 9, 9, 9, 9, 9],
-  })
+  /*['🌞', '🌞🌞', '🌚', '🌚🌚🌚', 'Анал', 'МБР', 'ОВР']*/
 
   const rows = [
-    [chalk.white.bold('Дом')],
-    [''],
-    [chalk.white.bold('Выезд')],
-    [''],
+    [],
+    [],
+    [],
+    [],
   ]
 
   keys.forEach((k, idx) => {
-    let pos = idx % 7 + 1
+    let pos = idx % 7
     let shift = idx >= 7
 
-    let p = prevValue[k].toLocaleString('ru', { minimumFractionDigits: 0 })
-    let n = nextValue[k].toLocaleString('ru', { minimumFractionDigits: 0 })
+    let p = formatNumber(prevValue[k])
+    let n = formatNumber(nextValue[k])
 
-    p = p === '0' ? '-' : p
-    n = n === '0' ? '-' : n
+    p = p === '0к' ? '-' : p
+    n = n === '0к' ? '-' : n
+
+    if (pos === 4) {
+      rows[shift ? 2 : 0][pos] = chalk.dim('│')
+      rows[shift ? 3 : 1][pos] = chalk.dim('│')
+    }
+
+    if (pos >= 4) {
+      pos++
+    }
 
     if (prevValue[k] !== nextValue[k]) {
-      rows[shift ? 2 : 0][pos] = p
-      rows[shift ? 3 : 1][pos] = prevValue[k] < nextValue[k] ? chalk.green('↑ ' + n) : chalk.red('↓ ' + n)
+      rows[shift ? 2 : 0][pos] = p.padStart(BLOCK_WIDTH)
+      rows[shift ? 3 : 1][pos] = prevValue[k] < nextValue[k]
+        ? chalk.green(`${n}`.padStart(BLOCK_WIDTH))
+        : chalk.red(`${n}`.padStart(BLOCK_WIDTH))
     } else {
-      rows[shift ? 2 : 0][pos] = chalk.dim(p)
-      rows[shift ? 3 : 1][pos] = ''
+      rows[shift ? 2 : 0][pos] = chalk.dim(p.padStart(BLOCK_WIDTH))
+      rows[shift ? 3 : 1][pos] = ''.padStart(BLOCK_WIDTH)
+    }
+
+    if (idx === keys.length - 1) {
+      pos++
+      rows[shift ? 2 : 0][pos] = chalk.dim('│')
+      rows[shift ? 3 : 1][pos] = chalk.dim('│')
     }
   })
 
-  rows[2].push(...['', '', ''])
-  rows[3].push(...['', '', ''])
-
-  table.push(...rows)
-
-  const tableStr = table.toString()
-
-  const [firstLine, ...otherLines] = tableStr.split('\n')
-
-  const lineLength = firstLine
-    .replaceAll('\x1B[31m', '')
-    .replaceAll('\x1B[39m', '')
-    .replaceAll('\x1B[90m', '')
-    .replaceAll('\x1B[22m', '')
-    .replaceAll('\x1B[37m', '')
-    .replaceAll('\x1B[1m', '')
-  .length
-
-  const line = new Array(lineLength).fill('─').join('')
+  const line = new Array(7 * (BLOCK_WIDTH + 1) + 1).fill('─').join('')
 
   console.log(chalk.dim(line))
-  console.log(firstLine)
+  console.log(rows[0].join(' '))
+  console.log(rows[1].join(' '))
   console.log(chalk.dim(line.replaceAll('─', '-')))
-  console.log(otherLines.join('\n'))
+  console.log(rows[2].join(' '))
+  console.log(rows[3].join(' '))
   console.log(chalk.dim(line))
 }

@@ -1,9 +1,9 @@
 import sharp from 'sharp'
 import imghash from 'imghash'
 
-const THRASHOLD = 8
+const THRESHOLD = 8
 
-const c = (c1, c2, t = THRASHOLD) => {
+const c = (c1, c2, t = THRESHOLD) => {
   //console.log(c1, '===', c2)
   //console.log(c1[0] - t, '...', c2[0], '...', c1[0] + t)
   //console.log(c1[1] - t, '...', c2[1], '...', c1[1] + t)
@@ -51,7 +51,7 @@ export class Image {
     })
   }
 
-  async crop(threshold = THRASHOLD) {
+  async crop(threshold = THRESHOLD) {
     return new Promise((resolve, reject) => {
       this.image
         .trim(threshold)

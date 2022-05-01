@@ -7,11 +7,22 @@ import { createReadStream } from 'fs'
 
 const YANDEX_DISK_URL = 'https://cloud-api.yandex.net/v1/disk'
 
+let agentsCounter = 0
+
 export class YandexDisk {
+  agentId = `${agentsCounter++}`
   currentFolder
 
   constructor(token) {
     this.token = token
+    this.initListeners()
+  }
+
+  async initListeners() {
+    process.on('SIGINT', async () => {
+      await this.removeLastLockFile()
+      process.exit()
+    })
   }
 
   async request(url, localPath) {
@@ -52,7 +63,11 @@ export class YandexDisk {
   }
 
   async uploadFile(localPath, remotePath, { overwrite, removeAfterUpload }) {
-    console.log(chalk.dim('(' + new Date().toLocaleString('ru') + ')'), remotePath);
+    const pathParts = remotePath.split('/')
+    const innerId = pathParts[2]
+    pathParts[2] = chalk.bold(innerId)
+
+    console.log(chalk.dim(new Date().toLocaleString('ru')), `[${this.agentId}]`, pathParts.join('/'));
 
     const urlInfo = await this.apiRequest('GET', '/resources/upload', {
       path: remotePath,
@@ -80,20 +95,23 @@ export class YandexDisk {
   }
 
   async removeLockFile(folder) {
-    await fs.unlink(folder + '/.lock')
+    try {
+      await fs.unlink(folder + '/.lock')
+    } catch (e) {}
+  }
+
+  async fileStats(file) {
+    return this.apiRequest('GET', '/resources', { path: file })
   }
 
   async removeLastLockFile() {
     await this.removeLockFile(this.currentFolder)
   }
 
-  async uploadFolder(localFolder, remoteFolder, params) {
+  async uploadFolder(localFolder, remoteFolder, params = {}) {
     if (remoteFolder !== 'IC') {
       await this.createLockFile(localFolder)
     }
-
-    console.log();
-    console.log(chalk.bold.cyan(localFolder), '->', chalk.bold.yellow(remoteFolder));
 
     this.currentFolder = localFolder
 
@@ -103,8 +121,6 @@ export class YandexDisk {
 
     const list = (await fs.readdir(localFolder)).filter(f => !f.startsWith('.'))
     let len = list.length
-
-    console.log();
 
     for (let i = 0; i < len; i++) {
       const fname = list[i]
@@ -126,15 +142,21 @@ export class YandexDisk {
 
         if (removeAfterUpload) {
           await this.removeLockFile(fpath)
-          await fs.rmdir(fpath)
+          try {
+            await fs.rmdir(fpath)
+          } catch(e) {}
         }
 
         continue
       }
 
-      await this.uploadFile(fpath, fpathRemote, params)
+      try {
+        await this.uploadFile(fpath, fpathRemote, params)
+      } catch (e) {
+        i--
+        continue
+      }
     }
-
   }
 
   async downloadFile(remotePath) {}

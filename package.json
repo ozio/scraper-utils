@@ -11,8 +11,10 @@
   "license": "ISC",
   "dependencies": {
     "abort-controller": "^3.0.0",
+    "adm-zip": "^0.5.9",
+    "ansi-to-html": "^0.7.2",
     "chalk": "^5.0.1",
-    "cli-table": "^0.3.11",
+    "color-hash": "^2.0.1",
     "dotenv": "^16.0.0",
     "ffprobe-client": "^1.1.6",
     "iconv": "^3.0.1",
@@ -20,6 +22,9 @@
     "node-fetch": "^3.2.3",
     "node-html-parser": "^5.3.3",
     "sharp": "^0.30.3",
-    "socks-proxy-agent": "^6.2.0-beta.0"
+    "socks-proxy-agent": "^6.2.0-beta.0",
+    "ansi-html": "^0.0.9",
+    "linkify-html": "^3.0.5",
+    "nodemailer": "^6.7.4"
   }
 }
