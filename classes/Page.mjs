@@ -3,7 +3,7 @@ import { parse } from 'node-html-parser'
 export class Page {
   cache = {}
 
-  constructor({ url, html }) {
+  #p({ url, html }) {
     if (url) {
       this.url = new URL(url)
     }
@@ -15,15 +15,11 @@ export class Page {
     })
   }
 
+  constructor({ url, html }) {
+    this.#p({ url, html })
+  }
+
   update({ url, html }) {
-    if (url) {
-      this.url = new URL(url)
-    }
-    this.html = html
-    this.root = parse(html, {
-      blockTextElements: {
-        script: true,
-      }
-    })
+    this.#p({ url, html })
   }
 }
