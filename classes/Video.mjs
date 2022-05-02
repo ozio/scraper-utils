@@ -21,13 +21,13 @@ export class Video {
     try {
       await fs.lstat(this.filePath)
     } catch (e) {
-      throw new Error(`File does not exist: ${this.filePath}`);
+      throw new Error(`File does not exist: ${this.filePath}`)
     }
 
     try {
       meta = await ffprobe(this.filePath)
     } catch (e) {
-      throw new Error(`Can't read video: ${this.filePath}`);
+      throw new Error(`Can't read video: ${this.filePath}`)
     }
 
     this.meta = meta
@@ -55,7 +55,9 @@ export class Video {
   async getHash() {
     if (this.hash) return this.hash
 
-    this.hash = crypto.createHash('md5').update(this.buffer).digest('hex')
+    this.hash = crypto.createHash('md5')
+      .update(this.buffer)
+      .digest('hex')
 
     return this.hash
   }
