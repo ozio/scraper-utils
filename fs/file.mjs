@@ -10,6 +10,10 @@ export const writeFile = async (outputPath, contents) => {
   await fs.writeFile(outputPath, contents, 'utf-8')
 }
 
+export const readFile = async (inputPath) => {
+  return fs.readFile(inputPath, 'utf-8')
+}
+
 export const removeFile = async (filePath) => {
   await fs.unlink(filePath)
 }
