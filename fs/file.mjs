@@ -19,7 +19,7 @@ export const archiveFile = async (inputPath, { outputPath, onProgress, removeOri
       time: 100,
     }, onProgress)
 
-    await pipe(source, gzip, str, destination)
+    await pipe(source, str, gzip, destination)
   }
 
   await pipe(source, gzip, destination)

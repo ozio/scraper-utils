@@ -2,7 +2,7 @@ import child_process from 'child_process'
 import fetch from 'node-fetch'
 import chalk from 'chalk'
 import { SocksProxyAgent } from 'socks-proxy-agent'
-import emojis from '../jsons/countryEmoji.json'
+import emojis from '../jsons/countryEmoji.json' assert { type: 'json' }
 
 export const changeIdentity = async (port = '9050') => {
   const agent = new SocksProxyAgent(`socks5://127.0.0.1:${port}`)
