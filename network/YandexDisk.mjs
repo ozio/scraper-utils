@@ -68,7 +68,7 @@ export class YandexDisk extends EventEmitter {
 
     try {
       await this.request(urlInfo.href, localPath)
-    } catch(e) {
+    } catch (e) {
       this.uploadingFiles.delete(localPath)
       throw e
     }
@@ -137,8 +137,8 @@ export class YandexDisk extends EventEmitter {
       await this.uploadFile(localPath, remotePath, { overwrite: true, removeAfterUpload: true })
       this.uploadQueue.delete(localPath)
     } catch (e) {
-      console.log(chalk.red(e.message));
-      console.log(chalk.dim(localPath));
+      console.log(chalk.red(e.message))
+      console.log(chalk.dim(localPath))
     }
 
     const localFileFolder = localPath.split('/').slice(0, -1).join('/')

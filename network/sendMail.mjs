@@ -2,6 +2,8 @@ import nodemailer from 'nodemailer'
 import ansiHTML from 'ansi-html'
 import linkifyHtml from 'linkify-html'
 
+import 'dotenv/config'
+
 ansiHTML.setColors({
   reset: ['inherit', 'inherit'], // [FOREGROUD_COLOR, BACKGROUND_COLOR]
   black: '646464',
@@ -15,18 +17,28 @@ ansiHTML.setColors({
   darkgrey: '646464'
 })
 
-require('dotenv').config();
-
-export const sendMail = async (subject, contents, preview) => {
+export const sendMail = async ({
+  to,
+  from,
+  subject = 'no subject',
+  contents,
+  preview,
+  credentials: {
+    host,
+    port,
+    user,
+    pass,
+  }
+}) => {
   if (!contents) return
 
   const transporter = nodemailer.createTransport({
-    host: process.env.MAIL_HOST,
-    port: parseInt(process.env.MAIL_PORT),
+    host,
+    port: parseInt(port),
     secure: true,
     auth: {
-      user: process.env.MAIL_USER,
-      pass: process.env.MAIL_PASSWORD,
+      user,
+      pass,
     },
   })
 
@@ -103,14 +115,14 @@ export const sendMail = async (subject, contents, preview) => {
         })
       }</div>
     </body>
-  `;
+  `
 
   const info = await transporter.sendMail({
-    from: '"Kare Raisu" <ozio@kareraisu.ru>',
-    to: 'i@mr-ozio.ru',
-    subject: subject || 'no subject',
+    from,
+    to,
+    subject,
     html: html,
   })
 
-  console.log('Message sent:', info);
+  console.log('Message sent:', info)
 }

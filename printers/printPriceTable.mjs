@@ -2,7 +2,7 @@ const chalk = require('chalk')
 
 const BLOCK_WIDTH = 5
 
-const formatNumber = (number) => {
+const formatPrice = (number) => {
   return (number / 1000)
     .toLocaleString('ru', {
       minimumFractionDigits: 0,
@@ -38,8 +38,8 @@ const printPriceTable = (prevValue, nextValue) => {
     let pos = idx % 7
     let shift = idx >= 7
 
-    let p = formatNumber(prevValue[k])
-    let n = formatNumber(nextValue[k])
+    let p = formatPrice(prevValue[k])
+    let n = formatPrice(nextValue[k])
 
     p = p === '0к' ? '-' : p
     n = n === '0к' ? '-' : n
