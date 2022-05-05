@@ -1,6 +1,7 @@
 import { createReadStream, createWriteStream } from 'fs'
 import { stat, unlink } from 'fs/promises'
 import { createGunzip, createGzip } from 'zlib'
+import { Readable } from 'stream'
 import { pipeline } from 'stream/promises'
 import progress from 'progress-stream'
 import { streamToString as toString } from '../helpers/streamToString.mjs'
@@ -47,6 +48,14 @@ export const unarchiveFile = async (inputPath, { outputPath, onProgress, removeO
   if (removeOriginalFile) {
     await unlink(inputPath)
   }
+}
+
+export const writeArchivedFile = async (outputPath, contents) => {
+  const fromString = Readable.from([contents])
+  const gzip = createGzip()
+  const destination = createWriteStream(outputPath)
+
+  await pipeline(fromString, gzip, destination)
 }
 
 export const readArchivedFile = async (inputPath) => {
