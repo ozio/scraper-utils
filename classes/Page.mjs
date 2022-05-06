@@ -11,7 +11,7 @@ export class Page {
     this.root = parse(html, {
       blockTextElements: {
         script: true,
-      }
+      },
     })
   }
 

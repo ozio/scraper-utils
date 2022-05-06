@@ -37,11 +37,11 @@ export class Video {
 
   async getBasicInfo() {
     const meta = await this.getMeta()
-    const videoStream = meta.streams.find(s => s.codec_type === 'video')
+    const videoStream = meta.streams.find((s) => s.codec_type === 'video')
     const duration = Math.round(parseFloat(meta.format.duration))
 
     const data = {
-      duration
+      duration,
     }
 
     if (videoStream) {
@@ -55,9 +55,7 @@ export class Video {
   async getHash() {
     if (this.hash) return this.hash
 
-    this.hash = crypto.createHash('md5')
-      .update(this.buffer)
-      .digest('hex')
+    this.hash = crypto.createHash('md5').update(this.buffer).digest('hex')
 
     return this.hash
   }

@@ -35,7 +35,7 @@ export const download = (url, dest, { agent, signal, onProgress }) => {
     let downloaded = 0
     let status
 
-    const request = https.get(url, { agent }, response => {
+    const request = https.get(url, { agent }, (response) => {
       status = response.statusCode
 
       if (response.statusCode !== 200) {
@@ -49,7 +49,7 @@ export const download = (url, dest, { agent, signal, onProgress }) => {
         response.on('data', (chunk) => {
           downloaded += chunk.length
 
-          onProgress(Math.round(downloaded / full * 10000) / 100)
+          onProgress(Math.round((downloaded / full) * 10000) / 100)
         })
       }
 
@@ -58,13 +58,13 @@ export const download = (url, dest, { agent, signal, onProgress }) => {
       response.pipe(file)
     })
 
-    request.on('error', err => {
+    request.on('error', (err) => {
       file.close()
       fs.unlink(dest, noop)
       reject(err)
     })
 
-    file.on('error', err => {
+    file.on('error', (err) => {
       file.close()
       fs.unlink(dest, noop)
       reject(err)

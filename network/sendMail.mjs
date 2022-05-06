@@ -14,7 +14,7 @@ ansiHTML.setColors({
   magenta: 'be5ec7',
   cyan: '49b0b4',
   lightgrey: 'inherit',
-  darkgrey: '646464'
+  darkgrey: '646464',
 })
 
 export const sendMail = async ({
@@ -23,12 +23,7 @@ export const sendMail = async ({
   subject = 'no subject',
   contents,
   preview,
-  credentials: {
-    host,
-    port,
-    user,
-    pass,
-  }
+  credentials: { host, port, user, pass },
 }) => {
   if (!contents) return
 
@@ -50,7 +45,11 @@ export const sendMail = async ({
     linkifiedContents = linkifyHtml(ansiContents, {
       format: (value, type) => {
         if (type === 'url') {
-          if (value.includes('localhost') || value.includes('127.0.0.1') || value.includes('0.0.0.0')) {
+          if (
+            value.includes('localhost') ||
+            value.includes('127.0.0.1') ||
+            value.includes('0.0.0.0')
+          ) {
             return value
           }
 
@@ -66,7 +65,7 @@ export const sendMail = async ({
         }
 
         return value
-      }
+      },
     })
   } catch (e) {
     linkifiedContents += e.stack
@@ -85,35 +84,43 @@ export const sendMail = async ({
         }
       </style>
 
-      ${preview ? `
-        <div style="mso-hide: all; position: fixed; height: 0; max-height: 0; overflow: hidden; font-size: 0;">
-          ${preview}
-        </div>
-      ` : ''}
+      ${
+        preview
+          ? `
+            <div style="mso-hide: all; position: fixed; height: 0; max-height: 0; overflow: hidden; font-size: 0;">
+              ${preview}
+            </div>`
+          : ''
+      }
 
-      <div style="font-family: 'JetBrains Mono', Menlo, monospace; font-size: 85%; white-space: break-spaces;">${
-        linkifyHtml(ansiHTML(contents), {
+      <div style="font-family: 'JetBrains Mono', Menlo, monospace; font-size: 85%; white-space: break-spaces;">${linkifyHtml(
+        ansiHTML(contents),
+        {
           format: (value, type) => {
             if (type === 'url') {
-              if (value.includes('localhost') || value.includes('127.0.0.1') || value.includes('0.0.0.0')) {
+              if (
+                value.includes('localhost') ||
+                value.includes('127.0.0.1') ||
+                value.includes('0.0.0.0')
+              ) {
                 return value
               }
-    
+
               const url = new URL(value)
-    
+
               let text = url.pathname + url.search
-    
+
               if (text.length > 22) {
                 return text.slice(0, 11) + '...' + text.slice(-11)
               }
-    
+
               return text
             }
-    
+
             return value
-          }
-        })
-      }</div>
+          },
+        },
+      )}</div>
     </body>
   `
 

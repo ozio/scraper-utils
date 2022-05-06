@@ -8,7 +8,11 @@ export class Queue extends EventEmitter {
   queue = new Set()
   errorsCount = 0
 
-  constructor({ streams = Queue.DEFAULT_STREAMS, errorsLimit = Queue.DEFAULT_ERRORS_LIMIT, process = () => {} }) {
+  constructor({
+    streams = Queue.DEFAULT_STREAMS,
+    errorsLimit = Queue.DEFAULT_ERRORS_LIMIT,
+    process = () => {},
+  }) {
     super()
 
     this.streams = streams

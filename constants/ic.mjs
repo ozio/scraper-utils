@@ -28,4 +28,5 @@ export const icKnownRows = [
   'Адрес',
 ]
 
-export const icRestrictionMessage = 'Просмотр архивных анкет доступен только зарегистрированным пользователям'
+export const icRestrictionMessage =
+  'Просмотр архивных анкет доступен только зарегистрированным пользователям'

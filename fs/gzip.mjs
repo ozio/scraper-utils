@@ -6,17 +6,23 @@ import { pipeline } from 'stream/promises'
 import progress from 'progress-stream'
 import { streamToString as toString } from '../helpers/streamToString.mjs'
 
-export const archiveFile = async (inputPath, { outputPath, onProgress, removeOriginalFile } = {}) => {
+export const archiveFile = async (
+  inputPath,
+  { outputPath, onProgress, removeOriginalFile } = {},
+) => {
   const gzip = createGzip()
   const source = createReadStream(inputPath)
   const destination = createWriteStream(outputPath ? outputPath : `${inputPath}.gz`)
 
   if (onProgress) {
     const { size } = await stat(inputPath)
-    const str = progress({
-      length: size,
-      time: 100,
-    }, onProgress)
+    const str = progress(
+      {
+        length: size,
+        time: 100,
+      },
+      onProgress,
+    )
 
     await pipeline(source, str, gzip, destination)
   }
@@ -28,17 +34,23 @@ export const archiveFile = async (inputPath, { outputPath, onProgress, removeOri
   }
 }
 
-export const unarchiveFile = async (inputPath, { outputPath, onProgress, removeOriginalFile } = {}) => {
+export const unarchiveFile = async (
+  inputPath,
+  { outputPath, onProgress, removeOriginalFile } = {},
+) => {
   const ungzip = createGunzip()
   const source = createReadStream(inputPath)
   const destination = createWriteStream(outputPath ? outputPath : inputPath.slice(0, -3))
 
   if (onProgress) {
     const { size } = await stat(inputPath)
-    const str = progress({
-      length: size,
-      time: 500,
-    }, onProgress)
+    const str = progress(
+      {
+        length: size,
+        time: 500,
+      },
+      onProgress,
+    )
 
     await pipeline(source, str, ungzip, destination)
   } else {

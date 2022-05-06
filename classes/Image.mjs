@@ -101,7 +101,11 @@ export class Image {
     leftMiddle = await this.getPixelColor(clone, 0, Math.round(height / 2))
     rightMiddle = await this.getPixelColor(clone, width - 1, Math.round(height / 2))
 
-    if ((c(topMiddle, color) && c(bottomMiddle, color)) || (c(leftMiddle, color) && c(rightMiddle, color))) return true
+    if (
+      (c(topMiddle, color) && c(bottomMiddle, color)) ||
+      (c(leftMiddle, color) && c(rightMiddle, color))
+    )
+      return true
 
     return false
   }

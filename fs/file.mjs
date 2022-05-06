@@ -24,10 +24,13 @@ export const copyFile = async (inputPath, outputPath, { onProgress } = {}) => {
     const source = createReadStream(inputPath)
     const destination = createWriteStream(outputPath)
 
-    const str = progress({
-      length: size,
-      time: 100,
-    }, onProgress)
+    const str = progress(
+      {
+        length: size,
+        time: 100,
+      },
+      onProgress,
+    )
 
     await pipe(source, str, destination)
   } else {
