@@ -5,11 +5,12 @@ import AbortController from 'abort-controller'
 import fetch from 'node-fetch'
 
 export class Navigator extends EventEmitter {
-  static TIMEOUT = 15000
+  static DEFAULT_TIMEOUT = 15000
 
   conv
   agent
   label
+  timeout
 
   opts = {
     headers: {
@@ -30,10 +31,11 @@ export class Navigator extends EventEmitter {
     credentials: 'omit',
   }
 
-  constructor({ proxy, encoding, headers, label }) {
+  constructor({ proxy, encoding, headers, label, timeout = Navigator.DEFAULT_TIMEOUT }) {
     super()
 
     this.label = label
+    this.timeout = timeout
 
     if (encoding) {
       this.conv = Iconv(encoding, 'utf8')
@@ -50,7 +52,7 @@ export class Navigator extends EventEmitter {
     }
 
     if (proxy) {
-      this.opts.agent = new SocksProxyAgent(`socks5://${proxy}`)
+      this.opts.agent = new SocksProxyAgent(proxy)
     }
   }
 
@@ -68,7 +70,7 @@ export class Navigator extends EventEmitter {
     const controller = new AbortController()
     opts.signal = controller.signal
 
-    const timeout = setTimeout(controller.abort, Navigator.TIMEOUT)
+    const timeout = setTimeout(controller.abort, this.timeout)
 
     const res = await fetch(url, opts)
 
