@@ -57,8 +57,19 @@ export class YandexDisk extends EventEmitter {
     return await response.json()
   }
 
+  async getInfo() {
+    const info = await this.apiRequest('GET', '')
+
+    return {
+      totalSpace: info.total_space,
+      usedSpace: info.used_space,
+      trashSize: info.trash_size,
+      maxFileSize: info.max_file_size,
+    }
+  }
+
   async uploadFile(localPath, remotePath, { overwrite, removeAfterUpload }) {
-    this.emit('upload-file:start', localPath, remotePath)
+    this.emit('upload-file:start', { localPath, remotePath })
     this.uploadingFiles.add(localPath)
 
     const urlInfo = await this.apiRequest('GET', '/resources/upload', {
@@ -66,7 +77,10 @@ export class YandexDisk extends EventEmitter {
       overwrite,
     })
 
+    let size
+
     try {
+      size = (await fs.stat(localPath)).size
       await this.request(urlInfo.href, localPath)
     } catch (e) {
       this.uploadingFiles.delete(localPath)
@@ -78,7 +92,7 @@ export class YandexDisk extends EventEmitter {
     }
 
     this.uploadingFiles.delete(localPath)
-    this.emit('upload-file:finish', localPath, remotePath)
+    this.emit('upload-file:finish', { localPath, remotePath, size })
   }
 
   async fileStats(file) {
@@ -153,19 +167,34 @@ export class YandexDisk extends EventEmitter {
   }
 
   async uploadFolder(localFolder, remoteFolder, params = {}) {
-    this.emit('upload-folder:start', localFolder, remoteFolder)
+    this.emit('upload-folder:start', { localFolder, remoteFolder })
+
+    const stats = {
+      count: 0,
+      size: 0,
+    }
+    const countStats = ({ size }) => {
+      stats.count += 1
+      stats.size += size
+    }
+
     const tree = await this.getFolderTree(localFolder)
 
     await this.createFoldersTree(localFolder, remoteFolder)
 
     tree.forEach(this.uploadQueue.add, this.uploadQueue)
 
+    this.on('upload-file:finish', countStats)
+
     await Promise.all(
       new Array(YandexDisk.UPLOAD_AGENTS)
         .fill(undefined)
         .map(() => this.runUploadAgent(localFolder, remoteFolder))
     )
-    this.emit('upload-folder:finish', localFolder, remoteFolder)
+
+    this.off('upload-file:finish', countStats)
+
+    this.emit('upload-folder:finish', { localFolder, remoteFolder, stats })
   }
 
   async createFolder(remotePath) {
