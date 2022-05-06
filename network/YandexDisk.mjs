@@ -198,8 +198,8 @@ export class YandexDisk extends EventEmitter {
   }
 
   async createFolder(remotePath) {
-    this.emit('create-folder:start', remotePath)
+    this.emit('create-folder:start', { remotePath })
     await this.apiRequest('PUT', '/resources', { path: remotePath })
-    this.emit('create-folder:finish', remotePath)
+    this.emit('create-folder:finish', { remotePath })
   }
 }
