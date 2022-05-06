@@ -21,5 +21,21 @@
     "progress-stream": "2.0.0",
     "sharp": "0.30.4",
     "socks-proxy-agent": "6.2.0-beta.0"
+  },
+  "devDependencies": {
+    "prettier": "2.6.2"
+  },
+  "prettier": {
+    "semi": false,
+    "tabWidth": 2,
+    "useTabs": false,
+    "printWidth": 120,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "bracketSpacing": true,
+    "bracketSameLine": true,
+    "arrowParens": "always",
+    "quoteProps": "consistent",
+    "endOfLine": "lf"
   }
 }
