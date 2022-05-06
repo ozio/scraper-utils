@@ -8,7 +8,7 @@ import EventEmitter from 'events'
 
 export class YandexDisk extends EventEmitter {
   static API_URL = 'https://cloud-api.yandex.net/v1/disk'
-  static UPLOAD_AGENTS = 10
+  static UPLOAD_AGENTS = 20
 
   uploadingFiles = new Set()
   uploadQueue = new Set()
