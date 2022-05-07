@@ -4,7 +4,7 @@ import crypto from 'crypto'
 
 const noop = () => {}
 
-export const download = (url, dest, { agent, signal, onProgress }) => {
+export const download = (url, dest, { agent, signal, onProgress } = {}) => {
   if (!dest) {
     const format = url.split('.').slice(-1).join('')
     dest = `/tmp/${crypto.randomBytes(20).toString('hex')}.${format}`
@@ -34,6 +34,7 @@ export const download = (url, dest, { agent, signal, onProgress }) => {
     let full
     let downloaded = 0
     let status
+    let aborted = false
 
     const request = https.get(url, { agent }, (response) => {
       status = response.statusCode
@@ -72,11 +73,12 @@ export const download = (url, dest, { agent, signal, onProgress }) => {
 
     file.on('finish', () => {
       file.close()
-      resolve({ status, dest })
+      resolve({ status, dest, aborted })
     })
 
     if (signal) {
       signal.addEventListener('abort', () => {
+        aborted = true
         file.close()
         fs.unlink(dest, noop)
         request.destroy()

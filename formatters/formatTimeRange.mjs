@@ -28,7 +28,7 @@ export const formatTimeRange = (range, withMS) => {
     output.push(`${seconds}с`)
   }
 
-  if (withMS) {
+  if (withMS || output.length === 0) {
     output.push(`${ms}мс`)
   }
 

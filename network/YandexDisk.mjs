@@ -3,6 +3,7 @@ import fs from 'fs/promises'
 import chalk from 'chalk'
 import { createReadStream } from 'fs'
 import EventEmitter from 'events'
+import { Queue } from '../classes/Queue.mjs'
 
 // https://yandex.com/dev/disk/poligon/
 
@@ -100,13 +101,18 @@ export class YandexDisk extends EventEmitter {
   }
 
   async createFoldersTree(localFolder, remoteFolder) {
-    for (const localFolderPath of this.foldersTree) {
-      const remoteFolderPath = localFolderPath.replace(localFolder, remoteFolder)
+    const q = new Queue({
+      streams: 5,
+      process: async ({ item }) => {
+        const remoteFolderPath = item.replace(localFolder, remoteFolder)
 
-      try {
-        await this.createFolder(remoteFolderPath)
-      } catch (e) {}
-    }
+        try {
+          await this.createFolder(remoteFolderPath)
+        } catch (e) {}
+      },
+    })
+
+    await q.run([...this.foldersTree])
   }
 
   async getFolderTree(localFolder) {
