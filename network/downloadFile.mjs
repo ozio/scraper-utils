@@ -3,10 +3,10 @@ import { createWriteStream } from 'fs'
 import progress from 'progress-stream'
 import https from 'https'
 
-const files = new Set()
+const dowloadingFiles = new Set()
 
 const processErrorHandler = async () => {
-  for (const file of files) {
+  for (const file of dowloadingFiles) {
     await unlink(file)
   }
 
@@ -19,7 +19,7 @@ process.on('SIGTERM', processErrorHandler)
 export const downloadFile = async (remotePath, localPath, { onProgress, agent, signal } = {}) => {
   const promise = new Promise((resolve, reject) => {
     const file = createWriteStream(localPath)
-    files.add(localPath)
+    dowloadingFiles.add(localPath)
 
     let statusCode
     let aborted = false
@@ -54,7 +54,6 @@ export const downloadFile = async (remotePath, localPath, { onProgress, agent, s
     request.on('error', (err) => {
       if (err.code === 'ECONNRESET') {
         // https://stackoverflow.com/a/50821286/10733340
-        console.log('Timeout occurs')
         return
       }
 
@@ -85,7 +84,7 @@ export const downloadFile = async (remotePath, localPath, { onProgress, agent, s
   })
 
   promise.finally(() => {
-    files.delete(localPath)
+    dowloadingFiles.delete(localPath)
   })
 
   return promise

@@ -60,9 +60,8 @@ export const download = (url, dest, { agent, signal, onProgress } = {}) => {
     })
 
     request.on('error', (err) => {
-      if (err.code === "ECONNRESET") {
+      if (err.code === "ECONNRESET" || err.code === 'ENOTFOUND') {
         // https://stackoverflow.com/a/50821286/10733340
-        console.log("Timeout occurs")
         return
       }
 
