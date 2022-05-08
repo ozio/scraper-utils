@@ -26,6 +26,7 @@
     "prettier": "2.6.2"
   },
   "prettier": {
+    "parser": "babel",
     "semi": false,
     "tabWidth": 2,
     "useTabs": false,

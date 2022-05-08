@@ -7,6 +7,12 @@ import fetch from 'node-fetch'
 export class Navigator extends EventEmitter {
   static DEFAULT_TIMEOUT = 15000
 
+  stats = {
+    pages: 0,
+    bytes: 0,
+  }
+
+  ip
   conv
   agent
   label
@@ -54,9 +60,18 @@ export class Navigator extends EventEmitter {
     if (proxy) {
       this.opts.agent = new SocksProxyAgent(proxy)
     }
+
+    this.initStats()
   }
 
-  async go(url) {
+  initStats() {
+    this.on('page-open:finish', ({ size }) => {
+      this.stats.pages++
+      this.stats.bytes += size
+    })
+  }
+
+  async go(url, shouldRetry) {
     this.emit('page-open:start', { label: this.label, url })
 
     const opts = this.opts
@@ -72,7 +87,27 @@ export class Navigator extends EventEmitter {
 
     const timeout = setTimeout(controller.abort, this.timeout)
 
-    const res = await fetch(url, opts)
+    let res
+
+    try {
+      res = await fetch(url, opts)
+
+      if (!res.ok) {
+        throw new Error(`${res.statusText} (${res.status})`)
+      }
+    } catch (error) {
+      const errorPayload = { label: this.label, url, error }
+
+      if (shouldRetry) {
+        this.emit('page-open:retry', errorPayload)
+
+        return this.go(url, shouldRetry)
+      }
+
+      this.emit('page-open:error', errorPayload)
+
+      throw error
+    }
 
     clearTimeout(timeout)
 
@@ -105,5 +140,15 @@ export class Navigator extends EventEmitter {
     this.emit('page-open:finish', data)
 
     return data
+  }
+
+  async getIP() {
+    if (this.ip) return this.ip
+
+    const { body } = await this.go('https://api.ipify.org/')
+
+    this.ip = body
+
+    return this.ip
   }
 }

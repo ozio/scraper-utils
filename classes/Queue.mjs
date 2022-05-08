@@ -3,6 +3,7 @@ import { EventEmitter } from 'node:events'
 export class Queue extends EventEmitter {
   static DEFAULT_STREAMS = 5
   static DEFAULT_ERRORS_LIMIT = 20
+  static DEFAULT_PROCESS = () => {}
 
   processing = new Set()
   queue = new Set()
@@ -11,8 +12,8 @@ export class Queue extends EventEmitter {
   constructor({
     streams = Queue.DEFAULT_STREAMS,
     errorsLimit = Queue.DEFAULT_ERRORS_LIMIT,
-    process = () => {},
-    debugMode = false
+    process = Queue.DEFAULT_PROCESS,
+    debugMode = false,
   }) {
     super()
 
@@ -78,8 +79,7 @@ export class Queue extends EventEmitter {
 
     this.emit('queue:start')
 
-    await Promise.all(new Array(this.streams).fill(undefined)
-      .map(this.#runStream))
+    await Promise.all(Array.from({ length: this.streams }, this.#runStream))
 
     if (this.errorsCount >= this.errorsLimit) {
       this.emit('queue:errors-limit', {
