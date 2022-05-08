@@ -103,7 +103,7 @@ export class YandexDisk extends EventEmitter {
   async createFoldersTree(localFolder, remoteFolder) {
     const q = new Queue({
       streams: 5,
-      process: async ({ item }) => {
+      process: async (item) => {
         const remoteFolderPath = item.replace(localFolder, remoteFolder)
 
         try {

@@ -1,7 +1,7 @@
 import fs from 'fs/promises'
 
-const FIKA_FROM = 0 // *:00
-const FIKA_TO = 5   // *:05
+const FIKA_FROM = 4 // *:00
+const FIKA_TO = 9   // *:05
 
 const check = async (fromMinute, toMinute) => {
   if (typeof fromMinute === 'number' && typeof toMinute === 'number') {

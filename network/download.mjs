@@ -60,6 +60,12 @@ export const download = (url, dest, { agent, signal, onProgress } = {}) => {
     })
 
     request.on('error', (err) => {
+      if (err.code === "ECONNRESET") {
+        // https://stackoverflow.com/a/50821286/10733340
+        console.log("Timeout occurs")
+        return
+      }
+
       file.close()
       fs.unlink(dest, noop)
       reject(err)

@@ -3,10 +3,11 @@ import { parse } from 'node-html-parser'
 export class Page {
   cache = {}
 
-  #p({ url, html }) {
+  #p({ url, html, timestamp }) {
     if (url) {
       this.url = new URL(url)
     }
+    this.timestamp = timestamp
     this.html = html
     this.root = parse(html, {
       blockTextElements: {
@@ -15,11 +16,11 @@ export class Page {
     })
   }
 
-  constructor({ url, html }) {
-    this.#p({ url, html })
+  constructor({ url, html, timestamp }) {
+    this.#p({ url, html, timestamp })
   }
 
-  update({ url, html }) {
-    this.#p({ url, html })
+  update({ url, html, timestamp }) {
+    this.#p({ url, html, timestamp })
   }
 }
