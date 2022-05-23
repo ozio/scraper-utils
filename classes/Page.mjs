@@ -23,4 +23,10 @@ export class Page {
   update({ url, html, timestamp }) {
     this.#p({ url, html, timestamp })
   }
+
+  getData() {
+    console.warn('Warning: getData() method is empty');
+
+    return {}
+  }
 }

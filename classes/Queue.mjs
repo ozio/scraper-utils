@@ -64,12 +64,14 @@ export class Queue extends EventEmitter {
 
   add = (item) => {
     this.queue.add(item)
+    this.emit('queue:item-added', { item })
   }
 
   addMany = (list) => {
     for (const item of list) {
       this.add(item)
     }
+    this.emit('queue:items-added', { items: list, count: list.length })
   }
 
   run = async (list) => {
