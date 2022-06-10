@@ -4,6 +4,12 @@ import crypto from 'crypto'
 
 const noop = () => {}
 
+const unlink = (dest) => {
+  try {
+    fs.unlink(dest, noop)
+  } catch (e) {}
+}
+
 export const download = (url, dest, { agent, signal, onProgress } = {}) => {
   if (!dest) {
     const format = url.split('.').slice(-1).join('')
@@ -41,7 +47,7 @@ export const download = (url, dest, { agent, signal, onProgress } = {}) => {
 
       if (response.statusCode !== 200) {
         file.close()
-        fs.unlink(dest, noop)
+        unlink(dest)
         resolve({ status, dest })
         return
       }
@@ -60,19 +66,36 @@ export const download = (url, dest, { agent, signal, onProgress } = {}) => {
     })
 
     request.on('error', (err) => {
+      file.close()
+      unlink(dest)
+
       if (err.code === "ECONNRESET" || err.code === 'ENOTFOUND') {
         // https://stackoverflow.com/a/50821286/10733340
         return
       }
 
-      file.close()
-      fs.unlink(dest, noop)
+      if (err.message === 'SocksClientError: Proxy connection timed out') {
+        // kek?
+        return
+      }
+
+      if (err.message === 'SocksClientError: Socket closed') {
+        // kek?
+        return
+      }
+
+      console.log('request error', err);
+      console.log('request code', `"${err.code}"`);
+      console.log('request message', `"${err.message}"`);
+
       reject(err)
     })
 
     file.on('error', (err) => {
+      console.log('file error', err);
+
       file.close()
-      fs.unlink(dest, noop)
+      unlink(dest)
       reject(err)
     })
 
@@ -85,7 +108,7 @@ export const download = (url, dest, { agent, signal, onProgress } = {}) => {
       signal.addEventListener('abort', () => {
         aborted = true
         file.close()
-        fs.unlink(dest, noop)
+        unlink(dest)
         request.destroy()
       })
     }

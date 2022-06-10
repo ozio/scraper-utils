@@ -6,6 +6,15 @@ import progress from 'progress-stream'
 
 const pipe = promisify(pipeline)
 
+export const fileExists = async (filePath) => {
+  try {
+    await fs.stat(filePath)
+    return true
+  } catch (e) {
+    return false
+  }
+}
+
 export const writeFile = async (outputPath, contents) => {
   await fs.writeFile(outputPath, contents, 'utf-8')
 }
@@ -41,4 +50,14 @@ export const copyFile = async (inputPath, outputPath, { onProgress } = {}) => {
 export const moveFile = async (inputPath, outputPath, { onProgress } = {}) => {
   await copyFile(inputPath, outputPath, { onProgress })
   await removeFile(inputPath)
+}
+
+export const removeFile = async (filepath, throwIfNotExist) => {
+  if (throwIfNotExist) {
+    await fs.stat(filepath)
+  }
+
+  try {
+    await fs.unlink(filepath)
+  } catch (e) {}
 }
