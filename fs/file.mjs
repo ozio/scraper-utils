@@ -23,10 +23,6 @@ export const readFile = async (inputPath) => {
   return fs.readFile(inputPath, 'utf-8')
 }
 
-export const removeFile = async (filePath) => {
-  await fs.unlink(filePath)
-}
-
 export const copyFile = async (inputPath, outputPath, { onProgress } = {}) => {
   if (onProgress) {
     const { size } = await fs.stat(inputPath)
@@ -52,12 +48,12 @@ export const moveFile = async (inputPath, outputPath, { onProgress } = {}) => {
   await removeFile(inputPath)
 }
 
-export const removeFile = async (filepath, throwIfNotExist) => {
+export const removeFile = async (filePath, throwIfNotExist) => {
   if (throwIfNotExist) {
-    await fs.stat(filepath)
+    await fs.stat(filePath)
   }
 
   try {
-    await fs.unlink(filepath)
+    await fs.unlink(filePath)
   } catch (e) {}
 }
