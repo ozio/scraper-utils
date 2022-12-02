@@ -56,15 +56,19 @@ export const goto = async (url, proxy) => {
   clearTimeout(timeout)
 
   const status = res.status
-  const buffer = await res.buffer()
+  const buffer = Buffer.from(await res.arrayBuffer())
 
-  let html
+  let body
 
-  try {
-    html = conv.convert(buffer).toString()
-  } catch (e) {
-    html = buffer.toString()
+  if (url.includes('intimcity.nl')) {
+    try {
+      body = conv.convert(buffer).toString()
+    } catch (e) {
+      body = buffer.toString()
+    }
+  } else {
+    body = buffer.toString()
   }
 
-  return { body: html, status }
+  return { body, status }
 }

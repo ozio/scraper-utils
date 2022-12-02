@@ -33,7 +33,7 @@ export class Queue extends EventEmitter {
 
   #runStream = async () => {
     if (this.queue.size === 0) return
-    if (this.errorsCount >= this.errorsLimit) return
+    if (this.errorsLimit !== -1 && this.errorsCount >= this.errorsLimit) return
 
     let item
 
@@ -55,6 +55,10 @@ export class Queue extends EventEmitter {
     } catch (error) {
       this.errorsCount++
       this.emit('process:error', { item, error, errorsCount: this.errorsCount, errorsLimit: this.errorsLimit })
+
+      if (this.errorsLimit === -1) {
+        this.queue.delete(item)
+      }
     } finally {
       this.processing.delete(item)
     }
@@ -65,6 +69,10 @@ export class Queue extends EventEmitter {
   add = (item) => {
     this.queue.add(item)
     this.emit('queue:item-added', { item })
+
+    if (this.queue.size === 1) {
+      this.run()
+    }
   }
 
   addMany = (list) => {
@@ -83,7 +91,7 @@ export class Queue extends EventEmitter {
 
     await Promise.all(Array.from({ length: this.streams }, this.#runStream))
 
-    if (this.errorsCount >= this.errorsLimit) {
+    if (this.errorsLimit !== -1 && this.errorsCount >= this.errorsLimit) {
       this.emit('queue:errors-limit', {
         items: [...this.queue],
         errorsCount: this.errorsCount,

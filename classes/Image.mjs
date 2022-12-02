@@ -1,7 +1,32 @@
+import assert from 'node:assert'
 import sharp from 'sharp'
 import imghash from 'imghash'
+import fs from 'fs/promises'
 
 const THRESHOLD = 8
+const HASH_COMPLEXITY = 16
+
+function px(pixels, width, x, y) {
+  const pixel = width * y + x
+
+  assert(pixel < pixels.length);
+
+  return pixels[pixel];
+}
+
+function binaryToHex(s) {
+  let output = ''
+
+  for (let i = 0; i < s.length; i += 4) {
+    const bytes = s.substring(i, i + 4)
+    const decimal = parseInt(bytes, 2)
+    const hex = decimal.toString(16)
+
+    output += hex
+  }
+
+  return new Buffer(output, 'hex')
+}
 
 const c = (c1, c2, t = THRESHOLD) => {
   //console.log(c1, '===', c2)
@@ -55,13 +80,27 @@ export class Image {
     return new Promise((resolve, reject) => {
       this.image
         .trim(threshold)
-        .toBuffer()
-        .then((buffer) => {
+        .toBuffer((err, buffer, info) => {
+          if (err) reject(err)
+
           this.buffer = buffer
+          this.meta = {...this.meta, ...info }
           resolve(this)
         })
-        .catch(reject)
     })
+  }
+
+  async square() {
+    const min = Math.min(this.meta.width, this.meta.height)
+
+    this.meta.width = min
+    this.meta.height = min
+
+    await this.image.resize(min, min, { fill: 'cover' })
+
+    this.buffer = await this.image.toBuffer()
+
+    return
   }
 
   async getPixelColor(image, x, y) {
@@ -110,7 +149,57 @@ export class Image {
     return false
   }
 
-  async getHash() {
-    return imghash.hash(this.buffer, 16)
+  /* deprecated */
+  async getHash(complexity) {
+    return this.getPHash(complexity)
+  }
+
+  async getPHash(complexity = HASH_COMPLEXITY) {
+    return imghash.hash(this.buffer, complexity)
+  }
+
+  async getDHash(complexity = HASH_COMPLEXITY) {
+    const height = complexity
+    const width = height + 1
+
+    return this.image
+      .clone()
+      .grayscale()
+      .resize(width, height, { fit: 'fill' })
+      .raw()
+      .toBuffer()
+      .then(function(pixels) {
+        // Compare adjacent pixels.
+        let difference = ''
+
+        for (let row = 0; row < height; row++) {
+          for (let col = 0; col < height; col++) { // height is not a mistake here...
+            let left = px(pixels, width, col, row)
+            let right = px(pixels, width, col + 1, row)
+            difference += left < right ? 1 : 0
+          }
+        }
+        return BigInt(`0b${difference}`).toString(16) // binaryToHex(difference).toString()
+      })
+  }
+
+  async getDominantColor() {
+    const { dominant } = await this.image.stats()
+
+    return dominant
+  }
+
+  async getAverageColor() {
+    const color = await this.getPixelColor(this.image.clone().resize(1, 1, 'fit'), 0, 0)
+
+    return { r: color[0], g: color[1], b: color[2] }
+  }
+
+  async getDimentions() {
+    return { width: this.meta.width, height: this.meta.height }
+  }
+
+  async getRatio() {
+    return this.meta.width / this.meta.height
   }
 }

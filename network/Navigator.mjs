@@ -18,6 +18,8 @@ export class Navigator extends EventEmitter {
   label
   timeout
 
+  processCookies
+
   opts = {
     headers: {
       'user-agent': 'Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0',
@@ -37,11 +39,20 @@ export class Navigator extends EventEmitter {
     credentials: 'omit',
   }
 
-  constructor({ proxy, encoding, headers, label, timeout = Navigator.DEFAULT_TIMEOUT }) {
+  constructor({
+    proxy,
+    encoding,
+    headers,
+    label,
+    cookies,
+    processCookies,
+    timeout = Navigator.DEFAULT_TIMEOUT,
+  }) {
     super()
 
     this.label = label
     this.timeout = timeout
+    this.processCookies = processCookies
 
     if (encoding) {
       this.conv = Iconv(encoding, 'utf8')
@@ -59,6 +70,10 @@ export class Navigator extends EventEmitter {
 
     if (proxy) {
       this.opts.agent = new SocksProxyAgent(proxy)
+    }
+
+    if (cookies) {
+      this.opts.headers.cookie = cookies
     }
 
     this.initStats()
@@ -91,6 +106,15 @@ export class Navigator extends EventEmitter {
 
     try {
       res = await fetch(url, opts)
+
+      console.log(res.headers.get('set-cookie'))
+
+      if (this.processCookies && res.headers.get('set-cookie')) {
+        this.opts.headers.cookie = this.processCookies(
+          this.opts.headers.cookie,
+          res.headers.get('set-cookie'),
+        )
+      }
 
       if (!res.ok) {
         throw new Error(`${res.statusText} (${res.status})`)
