@@ -1,4 +1,4 @@
-import { createReadStream, createWriteStream } from 'fs:node'
+import { createReadStream, createWriteStream } from 'node:fs'
 import { promisify } from 'node:util'
 import { pipeline } from 'node:stream'
 import fs from 'node:fs/promises'
