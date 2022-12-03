@@ -1,14 +1,31 @@
-import { createReadStream, createWriteStream } from 'fs'
-import { promisify } from 'util'
-import { pipeline } from 'stream'
-import fs from 'fs/promises'
+import { createReadStream, createWriteStream } from 'fs:node'
+import { promisify } from 'node:util'
+import { pipeline } from 'node:stream'
+import fs from 'node:fs/promises'
 import progress from 'progress-stream'
 
 const pipe = promisify(pipeline)
 
+export const makeDirectory = async (fullPath) => {
+  const parts = fullPath.split('/')
+  let currentPath = ''
+
+  for (let i = 0; i < parts.length; i++) {
+    if (i === 0) continue
+
+    currentPath += `/${parts[i]}`
+
+    try {
+      await fs.access(currentPath)
+    } catch (e) {
+      await fs.mkdir(currentPath)
+    }
+  }
+}
+
 export const fileExists = async (filePath) => {
   try {
-    await fs.stat(filePath)
+    await fs.access(filePath)
     return true
   } catch (e) {
     return false
