@@ -3,6 +3,7 @@ import { promisify } from 'node:util'
 import { pipeline } from 'node:stream'
 import fs from 'node:fs/promises'
 import progress from 'progress-stream'
+import path from 'path'
 
 const pipe = promisify(pipeline)
 
@@ -21,6 +22,13 @@ export const makeDirectory = async (fullPath) => {
       await fs.mkdir(currentPath)
     }
   }
+}
+
+export const readDirectory = async (dirPath) => {
+  const list = await fs.readdir(dirPath)
+  const absPath = path.resolve(dirPath)
+
+  return list.map(item => `${absPath}/${item}`)
 }
 
 export const fileExists = async (filePath) => {
