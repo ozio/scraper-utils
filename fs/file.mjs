@@ -82,3 +82,10 @@ export const removeFile = async (filePath, throwIfNotExist) => {
     await fs.unlink(filePath)
   } catch (e) {}
 }
+
+export const removeDirectory = async (directoryPath) => {
+  await fs.rm(directoryPath, {
+    force: true,
+    recursive: true,
+  })
+}
