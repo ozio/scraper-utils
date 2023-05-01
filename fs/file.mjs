@@ -89,3 +89,8 @@ export const removeDirectory = async (directoryPath) => {
     recursive: true,
   })
 }
+
+export const fileSize = async (filePath) => {
+  const { size } = await fs.stat(filePath)
+  return size
+}

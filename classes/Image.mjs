@@ -1,7 +1,7 @@
+import fs from 'node:fs'
 import assert from 'node:assert'
 import sharp from 'sharp'
 import imghash from 'imghash'
-import fs from 'fs/promises'
 
 const THRESHOLD = 8
 const HASH_COMPLEXITY = 16
@@ -55,6 +55,10 @@ export class Image {
   meta
 
   constructor(buffer) {
+    if (typeof buffer === 'string') {
+      buffer = fs.readFileSync(buffer)
+    }
+
     this.buffer = buffer
     this.image = sharp(this.buffer)
   }
@@ -99,8 +103,6 @@ export class Image {
     await this.image.resize(min, min, { fill: 'cover' })
 
     this.buffer = await this.image.toBuffer()
-
-    return
   }
 
   async getPixelColor(image, x, y) {
