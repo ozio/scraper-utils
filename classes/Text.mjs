@@ -13,7 +13,7 @@ export class Text {
 
     const nilsimsa = new Nilsimsa()
     nilsimsa.update(this.text)
-    this.hash = nilsimsa.digest('hash')
+    this.hash = nilsimsa.digest('hex')
 
     return this.hash
   }
