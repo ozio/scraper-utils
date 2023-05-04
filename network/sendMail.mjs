@@ -45,11 +45,7 @@ export const sendMail = async ({
     linkifiedContents = linkifyHtml(ansiContents, {
       format: (value, type) => {
         if (type === 'url') {
-          if (
-            value.includes('localhost') ||
-            value.includes('127.0.0.1') ||
-            value.includes('0.0.0.0')
-          ) {
+          if (value.includes('localhost') || value.includes('127.0.0.1') || value.includes('0.0.0.0')) {
             return value
           }
 
@@ -98,11 +94,7 @@ export const sendMail = async ({
         {
           format: (value, type) => {
             if (type === 'url') {
-              if (
-                value.includes('localhost') ||
-                value.includes('127.0.0.1') ||
-                value.includes('0.0.0.0')
-              ) {
+              if (value.includes('localhost') || value.includes('127.0.0.1') || value.includes('0.0.0.0')) {
                 return value
               }
 
@@ -119,7 +111,7 @@ export const sendMail = async ({
 
             return value
           },
-        },
+        }
       )}</div>
     </body>
   `

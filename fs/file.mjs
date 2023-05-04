@@ -28,7 +28,7 @@ export const readDirectory = async (dirPath) => {
   const list = await fs.readdir(dirPath)
   const absPath = path.resolve(dirPath)
 
-  return list.map(item => `${absPath}/${item}`)
+  return list.map((item) => `${absPath}/${item}`)
 }
 
 export const fileExists = async (filePath) => {
@@ -59,7 +59,7 @@ export const copyFile = async (inputPath, outputPath, { onProgress } = {}) => {
         length: size,
         time: 100,
       },
-      onProgress,
+      onProgress
     )
 
     await pipe(source, str, destination)

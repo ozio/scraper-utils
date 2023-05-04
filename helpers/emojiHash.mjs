@@ -1290,7 +1290,7 @@ const emojis = [
   '👩‍👩‍👧‍👦',
   '👩‍👩‍👧‍👧',
   '👩‍❤️‍👩',
-  '👩‍❤️‍💋‍👩'
+  '👩‍❤️‍💋‍👩',
 ]
 
 export const emojiHash = (string = undefined, hashLength = 1) => {

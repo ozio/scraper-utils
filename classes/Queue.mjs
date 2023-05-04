@@ -22,12 +22,12 @@ export class Queue extends EventEmitter {
     this.errorsLimit = errorsLimit
 
     if (debugMode) {
-      this.on('process:start', args => console.log('process:start', JSON.stringify(args)))
-      this.on('process:finish', args => console.log('process:finish', JSON.stringify(args)))
-      this.on('process:error', args => console.log('process:error', JSON.stringify(args)))
-      this.on('queue:start', args => console.log('queue:start', JSON.stringify(args)))
-      this.on('queue:errors-limit', args => console.log('queue:errors-limit', JSON.stringify(args)))
-      this.on('queue:finish', args => console.log('queue:finish', JSON.stringify(args)))
+      this.on('process:start', (args) => console.log('process:start', JSON.stringify(args)))
+      this.on('process:finish', (args) => console.log('process:finish', JSON.stringify(args)))
+      this.on('process:error', (args) => console.log('process:error', JSON.stringify(args)))
+      this.on('queue:start', (args) => console.log('queue:start', JSON.stringify(args)))
+      this.on('queue:errors-limit', (args) => console.log('queue:errors-limit', JSON.stringify(args)))
+      this.on('queue:finish', (args) => console.log('queue:finish', JSON.stringify(args)))
     }
   }
 
@@ -95,7 +95,7 @@ export class Queue extends EventEmitter {
       this.emit('queue:errors-limit', {
         items: [...this.queue],
         errorsCount: this.errorsCount,
-        errorsLimit: this.errorsLimit
+        errorsLimit: this.errorsLimit,
       })
     }
 

@@ -9,9 +9,7 @@ export const changeIdentity = async (port = '9050') => {
 
   let lineLength = 0
 
-  child_process.execSync(
-    `lsof -i :${port} -P -n | grep LISTEN | awk '{print $2}' | xargs -n1 kill -HUP`,
-  )
+  child_process.execSync(`lsof -i :${port} -P -n | grep LISTEN | awk '{print $2}' | xargs -n1 kill -HUP`)
 
   let ip = ''
 

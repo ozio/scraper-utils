@@ -3,11 +3,12 @@ const chalk = require('chalk')
 const BLOCK_WIDTH = 5
 
 const formatPrice = (number) => {
-  return (number / 1000)
-    .toLocaleString('ru', {
+  return (
+    (number / 1000).toLocaleString('ru', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 1,
     }) + 'к'
+  )
 }
 
 const printPriceTable = (prevValue, nextValue) => {
@@ -27,12 +28,7 @@ const printPriceTable = (prevValue, nextValue) => {
 
   /*['🌞', '🌞🌞', '🌚', '🌚🌚🌚', 'Анал', 'МБР', 'ОВР']*/
 
-  const rows = [
-    [],
-    [],
-    [],
-    [],
-  ]
+  const rows = [[], [], [], []]
 
   keys.forEach((k, idx) => {
     let pos = idx % 7
@@ -55,9 +51,10 @@ const printPriceTable = (prevValue, nextValue) => {
 
     if (prevValue[k] !== nextValue[k]) {
       rows[shift ? 2 : 0][pos] = p.padStart(BLOCK_WIDTH)
-      rows[shift ? 3 : 1][pos] = prevValue[k] < nextValue[k]
-        ? chalk.green(`${n}`.padStart(BLOCK_WIDTH))
-        : chalk.red(`${n}`.padStart(BLOCK_WIDTH))
+      rows[shift ? 3 : 1][pos] =
+        prevValue[k] < nextValue[k]
+          ? chalk.green(`${n}`.padStart(BLOCK_WIDTH))
+          : chalk.red(`${n}`.padStart(BLOCK_WIDTH))
     } else {
       rows[shift ? 2 : 0][pos] = chalk.dim(p.padStart(BLOCK_WIDTH))
       rows[shift ? 3 : 1][pos] = ''.padStart(BLOCK_WIDTH)

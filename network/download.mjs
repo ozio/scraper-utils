@@ -69,7 +69,7 @@ export const download = (url, dest, { agent, signal, onProgress } = {}) => {
       file.close()
       unlink(dest)
 
-      if (err.code === "ECONNRESET" || err.code === 'ENOTFOUND') {
+      if (err.code === 'ECONNRESET' || err.code === 'ENOTFOUND') {
         // https://stackoverflow.com/a/50821286/10733340
         return
       }
@@ -84,15 +84,15 @@ export const download = (url, dest, { agent, signal, onProgress } = {}) => {
         return
       }
 
-      console.log('request error', err);
-      console.log('request code', `"${err.code}"`);
-      console.log('request message', `"${err.message}"`);
+      console.log('request error', err)
+      console.log('request code', `"${err.code}"`)
+      console.log('request message', `"${err.message}"`)
 
       reject(err)
     })
 
     file.on('error', (err) => {
-      console.log('file error', err);
+      console.log('file error', err)
 
       file.close()
       unlink(dest)

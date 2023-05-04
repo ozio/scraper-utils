@@ -41,11 +41,10 @@ export const downloadFile = async (remotePath, localPath, { onProgress, agent, s
             length: contentLength,
             time: 100,
           },
-          onProgress,
+          onProgress
         )
 
-        response.pipe(str)
-          .pipe(file)
+        response.pipe(str).pipe(file)
       } else {
         response.pipe(file)
       }

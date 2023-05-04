@@ -3,14 +3,22 @@ export const areSame = (fields, left, right) => {
     if (field === 'areaTitle') {
       if (left[field] === right[field]) continue
 
-      if (!left[field] && left.area?.connectOrCreate.create.title && left.area?.connectOrCreate.create.title !== right[field]) {
+      if (
+        !left[field] &&
+        left.area?.connectOrCreate.create.title &&
+        left.area?.connectOrCreate.create.title !== right[field]
+      ) {
         //console.log(left.area?.connectOrCreate.create.title, '->', right[field])
         return false
       }
     } else if (field === 'cityTitle') {
       if (left[field] === right[field]) continue
 
-      if (!left[field] && left.city?.connectOrCreate.create.title && left.city?.connectOrCreate.create.title !== right[field]) {
+      if (
+        !left[field] &&
+        left.city?.connectOrCreate.create.title &&
+        left.city?.connectOrCreate.create.title !== right[field]
+      ) {
         //console.log(left.city?.connectOrCreate.create.title, '->', right[field])
         return false
       }

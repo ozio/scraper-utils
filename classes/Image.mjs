@@ -9,9 +9,9 @@ const HASH_COMPLEXITY = 16
 function px(pixels, width, x, y) {
   const pixel = width * y + x
 
-  assert(pixel < pixels.length);
+  assert(pixel < pixels.length)
 
-  return pixels[pixel];
+  return pixels[pixel]
 }
 
 function binaryToHex(s) {
@@ -82,15 +82,13 @@ export class Image {
 
   async crop(threshold = THRESHOLD) {
     return new Promise((resolve, reject) => {
-      this.image
-        .trim(threshold)
-        .toBuffer((err, buffer, info) => {
-          if (err) reject(err)
+      this.image.trim(threshold).toBuffer((err, buffer, info) => {
+        if (err) reject(err)
 
-          this.buffer = buffer
-          this.meta = {...this.meta, ...info }
-          resolve(this)
-        })
+        this.buffer = buffer
+        this.meta = { ...this.meta, ...info }
+        resolve(this)
+      })
     })
   }
 
@@ -142,11 +140,7 @@ export class Image {
     leftMiddle = await this.getPixelColor(clone, 0, Math.round(height / 2))
     rightMiddle = await this.getPixelColor(clone, width - 1, Math.round(height / 2))
 
-    if (
-      (c(topMiddle, color) && c(bottomMiddle, color)) ||
-      (c(leftMiddle, color) && c(rightMiddle, color))
-    )
-      return true
+    if ((c(topMiddle, color) && c(bottomMiddle, color)) || (c(leftMiddle, color) && c(rightMiddle, color))) return true
 
     return false
   }
@@ -170,12 +164,13 @@ export class Image {
       .resize(width, height, { fit: 'fill' })
       .raw()
       .toBuffer()
-      .then(function(pixels) {
+      .then((pixels) => {
         // Compare adjacent pixels.
         let difference = ''
 
         for (let row = 0; row < height; row++) {
-          for (let col = 0; col < height; col++) { // height is not a mistake here...
+          for (let col = 0; col < height; col++) {
+            // height is not a mistake here...
             let left = px(pixels, width, col, row)
             let right = px(pixels, width, col + 1, row)
             difference += left < right ? 1 : 0

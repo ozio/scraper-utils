@@ -21,8 +21,8 @@ export const isValidPhone = (phone) => {
     '7777777',
     '8888888',
     '9999999',
-    '0000000'
-  ].some(num => {
+    '0000000',
+  ].some((num) => {
     return str.includes(num)
   })
 

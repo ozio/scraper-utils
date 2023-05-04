@@ -681,9 +681,10 @@ export const guessPrice = (text) => {
     tokens.push({ number, left, right, original: item.input })
   })
 
-  return tokens.map(processTokens)
+  return tokens
+    .map(processTokens)
     .filter(Boolean)
-    .map(t => {
+    .map((t) => {
       if (!t.mod) {
         delete t.mod
       }

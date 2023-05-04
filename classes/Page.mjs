@@ -25,7 +25,7 @@ export class Page {
   }
 
   getData() {
-    console.warn('Warning: getData() method is empty');
+    console.warn('Warning: getData() method is empty')
 
     return {}
   }

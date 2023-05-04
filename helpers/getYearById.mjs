@@ -1,6 +1,6 @@
 import { icIdRangesByYear } from '../constants/ic.mjs'
 
-const icYears = new Set(icIdRangesByYear.keys());
+const icYears = new Set(icIdRangesByYear.keys())
 
 export const getYearById = (platform, id) => {
   if (platform === 'rd') return 2022
