@@ -68,19 +68,10 @@ const processTokens = ({ number, left, right, original }) => {
     mod = 'warn before'
   }
 
-  if ([
-    'симпатии',
-    'усмотрение',
-    'отказать',
-  ].includes(left) || [
-    'обсуждается',
-    'оставляю',
-    'при',
-    'строго',
-    'только',
-    'зависит',
-    'исключительно',
-  ].includes(right)) {
+  if (
+    ['симпатии', 'усмотрение', 'отказать'].includes(left) ||
+    ['обсуждается', 'оставляю', 'при', 'строго', 'только', 'зависит', 'исключительно'].includes(right)
+  ) {
     mod = 'not guaranteed'
   }
 
@@ -92,14 +83,7 @@ const processTokens = ({ number, left, right, original }) => {
     mod = 'no face'
   }
 
-  if ([
-    'подружка',
-    'подружкой',
-    'подруга',
-    'подругой',
-    'доминой',
-    'приглашу',
-  ].includes(left)) {
+  if (['подружка', 'подружкой', 'подруга', 'подругой', 'доминой', 'приглашу'].includes(left)) {
     mod = 'girlfriend'
   }
 
@@ -125,13 +109,7 @@ const processTokens = ({ number, left, right, original }) => {
     mod = 'whatsapp'
   }
 
-  if ([
-    'подруги',
-    'подруга',
-    'подружки',
-    'подружка',
-    'девочки'
-  ].includes(right)) {
+  if (['подруги', 'подруга', 'подружки', 'подружка', 'девочки'].includes(right)) {
     return {
       type: 'girlfriend',
       value,
@@ -139,10 +117,7 @@ const processTokens = ({ number, left, right, original }) => {
     }
   }
 
-  if ([
-    'контакт',
-    'контакта',
-  ].includes(right) && value < 5) {
+  if (['контакт', 'контакта'].includes(right) && value < 5) {
     return {
       type: 'contacts',
       value,
@@ -150,10 +125,7 @@ const processTokens = ({ number, left, right, original }) => {
     }
   }
 
-  if ([
-    'раза',
-    'раз',
-  ].includes(right)) {
+  if (['раза', 'раз'].includes(right)) {
     return {
       type: 'times',
       value,
@@ -161,14 +133,7 @@ const processTokens = ({ number, left, right, original }) => {
     }
   }
 
-  if ([
-    'м',
-    'мин',
-    'минут',
-    'минуты',
-    'минуток',
-    'минутки',
-  ].includes(right)) {
+  if (['м', 'мин', 'минут', 'минуты', 'минуток', 'минутки'].includes(right)) {
     if (left === 'до') {
       mod = 'maximum'
     }
@@ -180,16 +145,7 @@ const processTokens = ({ number, left, right, original }) => {
     }
   }
 
-  if ([
-    'ч',
-    'час',
-    'часа',
-    'часов',
-    'чаосв',
-    'часика',
-    'часиков',
-    'часовую',
-  ].includes(right) && value < 20) {
+  if (['ч', 'час', 'часа', 'часов', 'чаосв', 'часика', 'часиков', 'часовую'].includes(right) && value < 20) {
     if (left === 'менее') {
       mod = 'maximum'
     }
@@ -201,12 +157,7 @@ const processTokens = ({ number, left, right, original }) => {
     }
   }
 
-  if ([
-    'х',
-    'человек',
-    'человека',
-    'мужчинами',
-  ].includes(right)) {
+  if (['х', 'человек', 'человека', 'мужчинами'].includes(right)) {
     return {
       type: 'participants',
       value,
@@ -214,10 +165,7 @@ const processTokens = ({ number, left, right, original }) => {
     }
   }
 
-  if ([
-    'см',
-    'сантиметров'
-  ].includes(right)) {
+  if (['см', 'сантиметров'].includes(right)) {
     return {
       type: 'centimeters',
       value,
@@ -229,22 +177,12 @@ const processTokens = ({ number, left, right, original }) => {
     mod = 'professional'
   }
 
-  if ([
-    'лет',
-    'год',
-    'года',
-    'летнее',
-    'летняя'
-  ].includes(right)) {
+  if (['лет', 'год', 'года', 'летнее', 'летняя'].includes(right)) {
     if (left === 'опыт' || left === 'работы') {
       mod = 'experience'
-    }
-
-    else if (left === 'с') {
+    } else if (left === 'с') {
       mod = 'started at'
-    }
-
-    else if (left === 'уже') {
+    } else if (left === 'уже') {
       mod = 'already'
     }
 
@@ -255,11 +193,7 @@ const processTokens = ({ number, left, right, original }) => {
     }
   }
 
-  if ([
-    'шт',
-    'штука',
-    'штук',
-  ].includes(right)) {
+  if (['шт', 'штука', 'штук'].includes(right)) {
     return {
       type: 'items',
       value,
@@ -267,10 +201,7 @@ const processTokens = ({ number, left, right, original }) => {
     }
   }
 
-  if ([
-    'рта',
-    'ротика',
-  ].includes(right) || right.startsWith('язы')) {
+  if (['рта', 'ротика'].includes(right) || right.startsWith('язы')) {
     return {
       type: 'mouth',
       value,
@@ -278,11 +209,7 @@ const processTokens = ({ number, left, right, original }) => {
     }
   }
 
-  if ([
-    'вагины',
-    'дырки',
-    'дырочки',
-  ].includes(right)) {
+  if (['вагины', 'дырки', 'дырочки'].includes(right)) {
     return {
       type: 'holes',
       value,
@@ -290,12 +217,7 @@ const processTokens = ({ number, left, right, original }) => {
     }
   }
 
-  if ([
-    'струйки',
-    'струи',
-    'струй',
-    'ручья',
-  ].includes(right)) {
+  if (['струйки', 'струи', 'струй', 'ручья'].includes(right)) {
     return {
       type: 'stream',
       value,
@@ -303,10 +225,7 @@ const processTokens = ({ number, left, right, original }) => {
     }
   }
 
-  if ([
-    'руки',
-    'ручки',
-  ].includes(right)) {
+  if (['руки', 'ручки'].includes(right)) {
     return {
       type: 'hands',
       value,
@@ -314,11 +233,7 @@ const processTokens = ({ number, left, right, original }) => {
     }
   }
 
-  if ([
-    'груди',
-    'сиськи',
-    'сисеньки',
-  ].includes(right)) {
+  if (['груди', 'сиськи', 'сисеньки'].includes(right)) {
     return {
       type: 'breasts',
       value,
@@ -326,9 +241,7 @@ const processTokens = ({ number, left, right, original }) => {
     }
   }
 
-  if ([
-    'стороны',
-  ].includes(right)) {
+  if (['стороны'].includes(right)) {
     return {
       type: 'ways',
       value,
@@ -336,10 +249,7 @@ const processTokens = ({ number, left, right, original }) => {
     }
   }
 
-  if ([
-    'горла',
-    'глоточки',
-  ].includes(right)) {
+  if (['горла', 'глоточки'].includes(right)) {
     return {
       type: 'throats',
       value,
@@ -347,7 +257,7 @@ const processTokens = ({ number, left, right, original }) => {
     }
   }
 
-  if ((left === 'грудь') && value < 10) {
+  if (left === 'грудь' && value < 10) {
     return {
       type: 'breasts size',
       value,
@@ -385,7 +295,6 @@ const processTokens = ({ number, left, right, original }) => {
 
   if (right.startsWith('паль')) {
     if (!Array.isArray(value) && value > 5) {
-
     } else {
       return {
         type: 'fingers',
@@ -403,15 +312,10 @@ const processTokens = ({ number, left, right, original }) => {
     }
   }
 
-  if ([
-    'т',
-    'тр',
-    'тыс',
-    'тысяч',
-  ].includes(right)) {
+  if (['т', 'тр', 'тыс', 'тысяч'].includes(right)) {
     if (number.toString(10).length < 4) {
       if (Array.isArray(value)) {
-        value = value.map(v => v * 1000)
+        value = value.map((v) => v * 1000)
       } else {
         value *= 1000
       }
@@ -468,13 +372,12 @@ const processTokens = ({ number, left, right, original }) => {
     debugger
   }
 
-  if (![
-    'р',
-    'руб',
-    'рублей'
-  ].includes(right) && (Array.isArray(value) && value[0] < 300 && value[1] < 300) || (value < 300)) {
+  if (
+    (!['р', 'руб', 'рублей'].includes(right) && Array.isArray(value) && value[0] < 300 && value[1] < 300) ||
+    value < 300
+  ) {
     if (Array.isArray(value) && value[0] <= 90 && value[1] <= 90) {
-      value = value.map(v => v * 1000)
+      value = value.map((v) => v * 1000)
     } else if (value <= 90) {
       value *= 1000
     } else {
@@ -490,21 +393,24 @@ const processTokens = ({ number, left, right, original }) => {
   }
 }
 
-const symbolsRegex = new RegExp([
-  /(820[1-9]|82[1-9]\d|8[34]\d{2})/,                // 8201-8499
-  /(850[1-9]|85[1-9]\d)/,                           // 8501-8599
-  /(970[1-9]|97[1-9]\d|9[89]\d{2})/,                // 9701-9999
-  /(1000[1-9]|100[1-9]\d)/,                         // 10001-10099
-  /11088/,                                          // 11088
-  /(6250[1-9]|625[1-9]\d|62[6-9]\d{2}|6[34]\d{3}|65[0-4]\d{2}|655[0-4]\d)/,
-                                                    // 62501-65549
-  /(12344\d|12345\d|123460)/,                       // 123440-123460
-  /(12740\d|1274[1-9]\d|127[5-9]\d{2})/,            // 127400-127999
-  /(12800[1-9]|1280[1-9]\d|128[1-6]\d{2}|128700)/,  // 128001-128700
-  /(12930\d|1293[1-9]\d|129[4-7]\d{2}|129800)/,     // 129300-129800
-]
-  .map(r => r.source)
-  .join('|'), 'g')
+const symbolsRegex = new RegExp(
+  [
+    /(820[1-9]|82[1-9]\d|8[34]\d{2})/, // 8201-8499
+    /(850[1-9]|85[1-9]\d)/, // 8501-8599
+    /(970[1-9]|97[1-9]\d|9[89]\d{2})/, // 9701-9999
+    /(1000[1-9]|100[1-9]\d)/, // 10001-10099
+    /11088/, // 11088
+    /(6250[1-9]|625[1-9]\d|62[6-9]\d{2}|6[34]\d{3}|65[0-4]\d{2}|655[0-4]\d)/,
+    // 62501-65549
+    /(12344\d|12345\d|123460)/, // 123440-123460
+    /(12740\d|1274[1-9]\d|127[5-9]\d{2})/, // 127400-127999
+    /(12800[1-9]|1280[1-9]\d|128[1-6]\d{2}|128700)/, // 128001-128700
+    /(12930\d|1293[1-9]\d|129[4-7]\d{2}|129800)/, // 129300-129800
+  ]
+    .map((r) => r.source)
+    .join('|'),
+  'g'
+)
 
 const getSurroundings = (input, leftPos, rightPos) => {
   let leftSide = ''
@@ -539,10 +445,7 @@ const getSurroundings = (input, leftPos, rightPos) => {
     rightSide = rightSide + input[i]
   }
 
-  return [
-    leftSide.trim(),
-    rightSide.trim()
-  ]
+  return [leftSide.trim(), rightSide.trim()]
 }
 
 export const guessPrice = (text) => {
