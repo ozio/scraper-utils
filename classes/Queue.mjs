@@ -87,6 +87,7 @@ export class Queue extends EventEmitter {
 
       this.emit('process:finish', { item, result })
       this.queue.delete(item)
+      this.emit('queue:change-size', { count: this.queue.size })
     } catch (error) {
       const retryCount = this.retries.get(item) || 0
 
@@ -102,6 +103,7 @@ export class Queue extends EventEmitter {
           errorsLimit: this.errorsLimit,
         })
         this.queue.delete(item)
+        this.emit('queue:change-size', { count: this.queue.size })
       }
     } finally {
       this.processing.delete(item)
@@ -114,6 +116,7 @@ export class Queue extends EventEmitter {
   add = (item) => {
     this.queue.add(item)
     this.emit('queue:item-added', { item })
+    this.emit('queue:change-size', { count: this.queue.size })
     this.#resetIdleTimer()
 
     if (this.queue.size === 1) {
