@@ -1,3 +1,5 @@
 node_modules
 .idea
 site
+.npm-cache
+.DS_Store

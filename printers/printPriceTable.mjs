@@ -1,4 +1,4 @@
-const chalk = require('chalk')
+import chalk from 'chalk'
 
 const BLOCK_WIDTH = 5
 
@@ -11,7 +11,7 @@ const formatPrice = (number) => {
   )
 }
 
-const printPriceTable = (prevValue, nextValue) => {
+export const printPriceTable = (prevValue, nextValue) => {
   const keys = [
     'priceDay1HIn',
     'priceDay2HIn',

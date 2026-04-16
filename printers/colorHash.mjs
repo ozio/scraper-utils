@@ -1,7 +1,7 @@
 import chalk from 'chalk'
-import pkg from 'color-hash'
+import ColorHashPackage from 'color-hash'
 
-const ColorHash = pkg.default
+const ColorHash = ColorHashPackage?.default ?? ColorHashPackage
 const ch = new ColorHash()
 
 export const colorHash = (text) => {
