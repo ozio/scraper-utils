@@ -1,6 +1,6 @@
 {
   "name": "@mr_ozio/scraper-utils",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Small utilities. Named APIs. Pleasant call sites.",
   "scripts": {
     "docs:build": "node scripts/generate-docs.mjs",
