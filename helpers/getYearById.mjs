@@ -1,7 +1,16 @@
 import { icIdRangesByYear } from '../constants/ic.mjs'
 
-const icYears = new Set(icIdRangesByYear.keys())
-
+/**
+ * Guesses the year for an item id on a supported platform.
+ *
+ * Supported platforms:
+ * - `ic`
+ * - `rd`
+ *
+ * @param {'ic' | 'rd'} platform
+ * @param {number} id
+ * @returns {number | undefined}
+ */
 export const getYearById = (platform, id) => {
   if (platform === 'rd') return 2022
 
@@ -26,6 +35,34 @@ export const getYearById = (platform, id) => {
   }
 }
 
+/**
+ * Guesses the year for an item id using named options.
+ *
+ * @param {{ platform: 'ic' | 'rd', id: number }} options
+ * @returns {number | undefined}
+ *
+ * @example
+ * const year = yearForId({
+ *   platform: 'ic',
+ *   id: 125001,
+ * })
+ */
+export const yearForId = ({ platform, id }) => {
+  return getYearById(platform, id)
+}
+
+/**
+ * Guesses the year for an Intimcity id.
+ *
+ * @param {number} id
+ * @returns {number | undefined}
+ */
 export const getYearByICId = (id) => getYearById('ic', id)
 
+/**
+ * Guesses the year for an RD id.
+ *
+ * @param {number} id
+ * @returns {number | undefined}
+ */
 export const getYearByRDId = (id) => getYearById('rd', id)

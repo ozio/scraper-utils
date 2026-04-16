@@ -1,3 +1,14 @@
+/**
+ * Calculates the median value.
+ *
+ * The input array is sorted in place before the median is picked.
+ *
+ * @param {number[]} values
+ * @returns {number}
+ *
+ * @example
+ * const median = medianOf([1200, 1500, 1800])
+ */
 export const calculateMedian = (values) => {
   if (values.length === 0) return 0
 
@@ -8,4 +19,14 @@ export const calculateMedian = (values) => {
   if (values.length % 2) return values[half]
 
   return (values[half - 1] + values[half]) / 2
+}
+
+/**
+ * Calculates the median with a shorter, more readable call shape.
+ *
+ * @param {number[]} values
+ * @returns {number}
+ */
+export const medianOf = (values) => {
+  return calculateMedian(values)
 }

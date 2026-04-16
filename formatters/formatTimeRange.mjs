@@ -2,6 +2,13 @@ const HOUR = 1000 * 60 * 60
 const MINUTE = 1000 * 60
 const SECOND = 1000
 
+/**
+ * Formats a duration in milliseconds into a compact human-readable string.
+ *
+ * @param {number} range
+ * @param {boolean} [withMS=false]
+ * @returns {string}
+ */
 export const formatTimeRange = (range, withMS) => {
   //if (range < 1000) return '0с';
 
@@ -14,7 +21,7 @@ export const formatTimeRange = (range, withMS) => {
   const seconds = secondsInMs / SECOND
   const ms = range % 1000
 
-  let output = []
+  const output = []
 
   if (hours > 0) {
     output.push(`${hours}ч`)

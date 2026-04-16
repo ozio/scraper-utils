@@ -448,6 +448,14 @@ const getSurroundings = (input, leftPos, rightPos) => {
   return [leftSide.trim(), rightSide.trim()]
 }
 
+/**
+ * Extracts price-like tokens from free-form text.
+ *
+ * Returns a normalized list of objects with `type`, `value`, and optional `mod`.
+ *
+ * @param {string} text
+ * @returns {Array<{ type: string, value: number | number[], mod?: string }>}
+ */
 export const guessPrice = (text) => {
   let str = text
 
@@ -594,4 +602,14 @@ export const guessPrice = (text) => {
 
       return t
     })
+}
+
+/**
+ * Extracts price-like tokens using a more readable name.
+ *
+ * @param {string} text
+ * @returns {Array<{ type: string, value: number | number[], mod?: string }>}
+ */
+export const pricesIn = (text) => {
+  return guessPrice(text)
 }

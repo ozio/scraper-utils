@@ -3,6 +3,19 @@ import { readArchivedFile } from '../fs/gzip.mjs'
 
 const PROGRESS_INTERVAL = 2000
 
+/**
+ * Iterates through snapshot files in a directory.
+ *
+ * @param {{
+ *   snapshotPath: string,
+ *   callback: Function,
+ *   onProgress?: Function,
+ *   filter?: Function,
+ *   shouldReadFile?: boolean,
+ *   progressInterval?: number
+ * }} options
+ * @returns {Promise<void>}
+ */
 export const eachSnapshot = async ({
   snapshotPath,
   callback,
@@ -21,19 +34,22 @@ export const eachSnapshot = async ({
 
   let i = 0
 
-  onProgress && onProgress({
-    total,
-    current: i,
-    left: total - i,
-  })
-
-  const interval = onProgress ? setInterval(() => {
+  onProgress &&
     onProgress({
       total,
       current: i,
       left: total - i,
     })
-  }, progressInterval) : null
+
+  const interval = onProgress
+    ? setInterval(() => {
+        onProgress({
+          total,
+          current: i,
+          left: total - i,
+        })
+      }, progressInterval)
+    : null
 
   for (; i < total; i++) {
     const filename = list[i]
@@ -63,11 +79,55 @@ export const eachSnapshot = async ({
     })
   }
 
-  onProgress && onProgress({
-    total,
-    current: i,
-    left: total - i,
-  })
+  onProgress &&
+    onProgress({
+      total,
+      current: i,
+      left: total - i,
+    })
 
   clearInterval(interval)
+}
+
+/**
+ * Iterates through snapshot files in a directory.
+ *
+ * @param {{ in: string, callback: Function, onProgress?: Function, filter?: Function, shouldReadFile?: boolean, progressInterval?: number }} options
+ * @returns {Promise<void>}
+ *
+ * @example
+ * await forEachSnapshot({
+ *   in: './snapshots',
+ *   callback: async ({ filename }) => {
+ *     console.log(filename)
+ *   },
+ * })
+ */
+export const forEachSnapshot = async ({ in: snapshotPath, ...options }) => {
+  await eachSnapshot({
+    snapshotPath,
+    ...options,
+  })
+}
+
+/**
+ * Iterates through snapshot files and reads their contents automatically.
+ *
+ * @param {{ in: string, callback: Function, onProgress?: Function, filter?: Function, progressInterval?: number }} options
+ * @returns {Promise<void>}
+ *
+ * @example
+ * await readEachSnapshot({
+ *   in: './snapshots',
+ *   callback: async ({ html }) => {
+ *     console.log(html.length)
+ *   },
+ * })
+ */
+export const readEachSnapshot = async ({ in: snapshotPath, ...options }) => {
+  await eachSnapshot({
+    snapshotPath,
+    shouldReadFile: true,
+    ...options,
+  })
 }

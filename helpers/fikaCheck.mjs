@@ -20,6 +20,15 @@ const check = async (fromMinute, toMinute) => {
   }
 }
 
+/**
+ * Waits until the blocked minute range has passed.
+ *
+ * When the first argument is a string, it waits until that file appears.
+ *
+ * @param {number | string} [fromMinute=FIKA_FROM]
+ * @param {number} [toMinute=FIKA_TO]
+ * @returns {Promise<void>}
+ */
 export const fikaCheck = async (fromMinute = FIKA_FROM, toMinute = FIKA_TO) => {
   if (await check(fromMinute, toMinute)) {
     return Promise.resolve()
@@ -36,4 +45,29 @@ export const fikaCheck = async (fromMinute = FIKA_FROM, toMinute = FIKA_TO) => {
       }
     }, 1000)
   })
+}
+
+/**
+ * Waits until a blocked minute range has passed.
+ *
+ * @param {{ fromMinute?: number, toMinute?: number }} [options]
+ * @returns {Promise<void>}
+ */
+export const waitForFika = async ({ fromMinute = FIKA_FROM, toMinute = FIKA_TO } = {}) => {
+  await fikaCheck(fromMinute, toMinute)
+}
+
+/**
+ * Waits until a file appears on disk.
+ *
+ * @param {{ at: string }} options
+ * @returns {Promise<void>}
+ *
+ * @example
+ * await waitForFile({
+ *   at: '/tmp/ready.flag',
+ * })
+ */
+export const waitForFile = async ({ at }) => {
+  await fikaCheck(at)
 }

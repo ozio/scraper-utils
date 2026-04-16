@@ -1293,6 +1293,18 @@ const emojis = [
   '👩‍❤️‍💋‍👩',
 ]
 
+/**
+ * Turns a string into a stable emoji hash.
+ *
+ * @param {string} [string]
+ * @param {number} [hashLength=1]
+ * @returns {string}
+ *
+ * @example
+ * const badge = emojiHashOf('scraper-utils', {
+ *   length: 2,
+ * })
+ */
 export const emojiHash = (string = undefined, hashLength = 1) => {
   const hash = crypto.createHash('sha256').update(string)
   const hexHash = hash.digest('hex')
@@ -1307,4 +1319,15 @@ export const emojiHash = (string = undefined, hashLength = 1) => {
   }
 
   return emojiString
+}
+
+/**
+ * Turns a string into a stable emoji hash with named options.
+ *
+ * @param {string} string
+ * @param {{ length?: number }} [options]
+ * @returns {string}
+ */
+export const emojiHashOf = (string, { length = 1 } = {}) => {
+  return emojiHash(string, length)
 }

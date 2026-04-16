@@ -2,6 +2,7 @@ import { unlink } from 'fs/promises'
 import { createWriteStream } from 'fs'
 import progress from 'progress-stream'
 import https from 'https'
+import { ensureParentDirectory } from '../fs/file.mjs'
 
 const dowloadingFiles = new Set()
 
@@ -87,4 +88,22 @@ export const downloadFile = async (remotePath, localPath, { onProgress, agent, s
   })
 
   return promise
+}
+
+/**
+ * Downloads a remote file into a destination path.
+ *
+ * @param {{ from: string, to: string, onProgress?: Function, agent?: https.Agent, signal?: AbortSignal, createDirectories?: boolean }} options
+ * @returns {ReturnType<typeof downloadFile>}
+ */
+export const downloadFileTo = async ({ from, to, onProgress, agent, signal, createDirectories = false } = {}) => {
+  if (createDirectories) {
+    await ensureParentDirectory({ for: to })
+  }
+
+  return downloadFile(from, to, {
+    onProgress,
+    agent,
+    signal,
+  })
 }

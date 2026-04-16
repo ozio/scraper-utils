@@ -1,3 +1,14 @@
+/**
+ * Compares objects by a selected list of fields.
+ *
+ * Special cases for `areaTitle` and `cityTitle` also look into nested
+ * `connectOrCreate.create.title` values.
+ *
+ * @param {string[]} fields
+ * @param {Record<string, any>} left
+ * @param {Record<string, any>} right
+ * @returns {boolean}
+ */
 export const areSame = (fields, left, right) => {
   for (const field of fields) {
     if (field === 'areaTitle') {
@@ -29,4 +40,21 @@ export const areSame = (fields, left, right) => {
   }
 
   return true
+}
+
+/**
+ * Compares objects by a selected list of fields using named arguments.
+ *
+ * @param {{ fields: string[], left: Record<string, any>, right: Record<string, any> }} options
+ * @returns {boolean}
+ *
+ * @example
+ * const matches = matchFields({
+ *   fields: ['title', 'cityTitle'],
+ *   left,
+ *   right,
+ * })
+ */
+export const matchFields = ({ fields, left, right }) => {
+  return areSame(fields, left, right)
 }

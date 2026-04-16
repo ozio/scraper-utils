@@ -1,9 +1,13 @@
 {
-  "name": "scraper-utils",
-  "version": "1.0.2",
-  "description": "",
+  "name": "@mr_ozio/scraper-utils",
+  "version": "2.0.0",
+  "description": "Small utilities. Named APIs. Pleasant call sites.",
   "scripts": {
-    "format": "prettier --write ."
+    "docs:build": "node scripts/generate-docs.mjs",
+    "format": "prettier --write .",
+    "release:publish": "node scripts/publish-package.mjs",
+    "test": "bun test",
+    "test:watch": "bun test --watch"
   },
   "keywords": [],
   "author": "",

@@ -10,7 +10,7 @@ export const goto = async (url, proxy) => {
   const opts = {
     headers: {
       'user-agent': 'Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0',
-      'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
       'accept-language': 'en-US,en;q=0.5',
       'sec-fetch-dest': 'document',
       'sec-fetch-mode': 'navigate',
@@ -71,4 +71,35 @@ export const goto = async (url, proxy) => {
   }
 
   return { body, status }
+}
+
+/**
+ * Fetches a page and returns both body and status.
+ *
+ * @param {{ at: string, proxy?: string }} options
+ * @returns {Promise<{ body: string, status: number }>}
+ *
+ * @example
+ * const page = await fetchPage({
+ *   at: 'https://example.com',
+ * })
+ */
+export const fetchPage = async ({ at, proxy } = {}) => {
+  return goto(at, proxy)
+}
+
+/**
+ * Reads only the page body from a URL.
+ *
+ * @param {{ at: string, proxy?: string }} options
+ * @returns {Promise<string>}
+ *
+ * @example
+ * const html = await readPage({
+ *   at: 'https://example.com',
+ * })
+ */
+export const readPage = async ({ at, proxy } = {}) => {
+  const { body } = await fetchPage({ at, proxy })
+  return body
 }
