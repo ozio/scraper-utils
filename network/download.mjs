@@ -1,6 +1,7 @@
 import https from 'https'
 import fs from 'fs'
 import crypto from 'crypto'
+import { downloadFile } from './downloadFile.mjs'
 
 const noop = () => {}
 
@@ -10,10 +11,41 @@ const unlink = (dest) => {
   } catch (e) {}
 }
 
+/**
+ * Downloads a remote file into a temporary path.
+ *
+ * @param {{ from: string, agent?: import('https').Agent, signal?: AbortSignal, onProgress?: Function }} [options]
+ * @returns {Promise<{ statusCode?: number, localPath: string, aborted?: boolean, status?: number, dest?: string }>}
+ * @style target
+ */
+export const downloadTemporaryFile = async ({ from, agent, signal, onProgress } = {}) => {
+  const format = from.split('.').slice(-1).join('')
+  const to = `/tmp/${crypto.randomBytes(20).toString('hex')}.${format}`
+
+  return downloadFile({
+    from,
+    to,
+    agent,
+    signal,
+    onProgress,
+  })
+}
+
+/**
+ * @style legacy
+ */
 export const download = (url, dest, { agent, signal, onProgress } = {}) => {
   if (!dest) {
-    const format = url.split('.').slice(-1).join('')
-    dest = `/tmp/${crypto.randomBytes(20).toString('hex')}.${format}`
+    return downloadTemporaryFile({
+      from: url,
+      agent,
+      signal,
+      onProgress,
+    }).then(({ localPath, statusCode, aborted }) => ({
+      status: statusCode,
+      dest: localPath,
+      aborted,
+    }))
   }
 
   let count = 0

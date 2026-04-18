@@ -1,13 +1,11 @@
 /**
- * Calculates the arithmetic mean of numeric values.
+ * Calculates the arithmetic mean with a more conversational name.
  *
  * @param {number[]} values
  * @returns {number}
- *
- * @example
- * const average = averageOf([10, 20, 30])
+ * @style target
  */
-export const calculateAverage = (values) => {
+export const averageOf = (values) => {
   let sum = 0
 
   for (let i = 0; i < values.length; i++) {
@@ -18,11 +16,13 @@ export const calculateAverage = (values) => {
 }
 
 /**
- * Calculates the arithmetic mean with a more conversational name.
+ * Calculates the arithmetic mean of numeric values.
  *
  * @param {number[]} values
  * @returns {number}
+ *
+ * @example
+ * const average = averageOf([10, 20, 30])
+ * @style legacy
  */
-export const averageOf = (values) => {
-  return calculateAverage(values)
-}
+export const calculateAverage = (values) => averageOf(values)

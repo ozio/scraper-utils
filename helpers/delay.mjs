@@ -1,16 +1,4 @@
 /**
- * Resolves after the given amount of milliseconds.
- *
- * @param {number} ms
- * @returns {Promise<void>}
- */
-export const delay = (ms) => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms)
-  })
-}
-
-/**
  * Waits for the given amount of milliseconds.
  *
  * @param {number} ms
@@ -18,7 +6,19 @@ export const delay = (ms) => {
  *
  * @example
  * await waitFor(250)
+ * @style target
  */
 export const waitFor = (ms) => {
-  return delay(ms)
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
 }
+
+/**
+ * Resolves after the given amount of milliseconds.
+ *
+ * @param {number} ms
+ * @returns {Promise<void>}
+ * @style legacy
+ */
+export const delay = (ms) => waitFor(ms)

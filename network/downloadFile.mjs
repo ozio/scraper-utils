@@ -17,7 +17,7 @@ const processErrorHandler = async () => {
 process.on('SIGINT', processErrorHandler)
 process.on('SIGTERM', processErrorHandler)
 
-export const downloadFile = async (remotePath, localPath, { onProgress, agent, signal } = {}) => {
+const downloadFileToPath = async (remotePath, localPath, { onProgress, agent, signal } = {}) => {
   const promise = new Promise((resolve, reject) => {
     const file = createWriteStream(localPath)
     dowloadingFiles.add(localPath)
@@ -94,14 +94,15 @@ export const downloadFile = async (remotePath, localPath, { onProgress, agent, s
  * Downloads a remote file into a destination path.
  *
  * @param {{ from: string, to: string, onProgress?: Function, agent?: https.Agent, signal?: AbortSignal, createDirectories?: boolean }} options
- * @returns {ReturnType<typeof downloadFile>}
+ * @returns {ReturnType<typeof downloadFileToPath>}
+ * @style target
  */
-export const downloadFileTo = async ({ from, to, onProgress, agent, signal, createDirectories = false } = {}) => {
+export const downloadFile = async ({ from, to, onProgress, agent, signal, createDirectories = false } = {}) => {
   if (createDirectories) {
     await ensureParentDirectory({ for: to })
   }
 
-  return downloadFile(from, to, {
+  return downloadFileToPath(from, to, {
     onProgress,
     agent,
     signal,

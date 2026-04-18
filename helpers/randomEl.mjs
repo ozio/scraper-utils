@@ -1,15 +1,4 @@
 /**
- * Returns a random element from an array.
- *
- * @template T
- * @param {T[]} arr
- * @returns {T | undefined}
- */
-export const randomEl = (arr) => {
-  return arr[Math.floor(Math.random() * arr.length)]
-}
-
-/**
  * Picks a random element using named options.
  *
  * @template T
@@ -20,7 +9,16 @@ export const randomEl = (arr) => {
  * const winner = pickRandom({
  *   from: ['a', 'b', 'c'],
  * })
+ * @style target
  */
-export const pickRandom = ({ from }) => {
-  return randomEl(from)
-}
+export const pickRandom = ({ from }) => from[Math.floor(Math.random() * from.length)]
+
+/**
+ * Returns a random element from an array.
+ *
+ * @template T
+ * @param {T[]} arr
+ * @returns {T | undefined}
+ * @style legacy
+ */
+export const randomEl = (arr) => pickRandom({ from: arr })

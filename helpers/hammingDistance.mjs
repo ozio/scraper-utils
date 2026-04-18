@@ -1,22 +1,21 @@
 /**
- * Calculates the Hamming distance between strings of the same length.
+ * Compares two strings and returns their Hamming distance.
  *
  * Stops early once the distance becomes greater than `maxDistance`.
  *
- * @param {string} [str1='']
- * @param {string} [str2='']
- * @param {number} [maxDistance=str1.length]
+ * @param {{ left?: string, right?: string, maxDistance?: number }} [options]
  * @returns {number | null}
+ * @style target
  */
-export const hammingDistance = (str1 = '', str2 = '', maxDistance = str1.length) => {
-  if (str1.length !== str2.length) {
+export const compareStrings = ({ left = '', right = '', maxDistance = left.length } = {}) => {
+  if (left.length !== right.length) {
     return null
   }
 
   let dist = 0
 
-  for (let i = 0; i < str1.length; i += 1) {
-    if (str1[i] !== str2[i]) {
+  for (let i = 0; i < left.length; i += 1) {
+    if (left[i] !== right[i]) {
       dist += 1
 
       if (dist > maxDistance) {
@@ -29,11 +28,13 @@ export const hammingDistance = (str1 = '', str2 = '', maxDistance = str1.length)
 }
 
 /**
- * Compares two strings and returns their Hamming distance.
+ * Calculates the Hamming distance between strings of the same length.
  *
- * @param {{ left?: string, right?: string, maxDistance?: number }} [options]
+ * @param {string} [str1='']
+ * @param {string} [str2='']
+ * @param {number} [maxDistance=str1.length]
  * @returns {number | null}
+ * @style legacy
  */
-export const compareStrings = ({ left = '', right = '', maxDistance = left.length } = {}) => {
-  return hammingDistance(left, right, maxDistance)
-}
+export const hammingDistance = (str1 = '', str2 = '', maxDistance = str1.length) =>
+  compareStrings({ left: str1, right: str2, maxDistance })

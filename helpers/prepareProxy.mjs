@@ -1,4 +1,4 @@
-import { flag } from './flag.mjs'
+import { hasFlag, readFlag } from './flag.mjs'
 
 const DEFAULT_PROXY = '127.0.0.1:9050'
 
@@ -9,19 +9,21 @@ const DEFAULT_PROXY = '127.0.0.1:9050'
  *
  * @param {{ fallback?: string }} [options]
  * @returns {string | undefined}
+ * @style target
  */
 export const resolveProxy = ({ fallback = DEFAULT_PROXY } = {}) => {
-  if (flag('--no-proxy')) {
+  if (hasFlag('--no-proxy')) {
     return undefined
   }
 
-  return flag('--proxy') || fallback
+  return readFlag({ named: '--proxy' }) || fallback
 }
 
 /**
  * The proxy resolved from the current process flags.
  *
  * @type {string | undefined}
+ * @style legacy
  */
 export const proxy = resolveProxy()
 
@@ -29,5 +31,6 @@ export const proxy = resolveProxy()
  * Returns the proxy resolved from the current process flags.
  *
  * @returns {string | undefined}
+ * @style legacy
  */
 export const getProxy = () => proxy

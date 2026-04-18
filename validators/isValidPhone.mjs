@@ -9,6 +9,7 @@
  *
  * @param {number | string | null | undefined} phone
  * @returns {boolean}
+ * @style target
  */
 export const isValidPhone = (phone) => {
   if (!phone) return false

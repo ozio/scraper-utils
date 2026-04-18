@@ -3,15 +3,14 @@ const MINUTE = 1000 * 60
 const SECOND = 1000
 
 /**
- * Formats a duration in milliseconds into a compact human-readable string.
+ * Formats a duration in milliseconds using named options.
  *
  * @param {number} range
- * @param {boolean} [withMS=false]
+ * @param {{ includeMilliseconds?: boolean }} [options]
  * @returns {string}
+ * @style target
  */
-export const formatTimeRange = (range, withMS) => {
-  //if (range < 1000) return '0с';
-
+export const formatDuration = (range, { includeMilliseconds = false } = {}) => {
   const hoursInMs = range - (range % HOUR)
   const minutesInMs = range - hoursInMs - (range % MINUTE)
   const secondsInMs = range - hoursInMs - minutesInMs - (range % SECOND)
@@ -35,9 +34,19 @@ export const formatTimeRange = (range, withMS) => {
     output.push(`${seconds}с`)
   }
 
-  if (withMS || output.length === 0) {
+  if (includeMilliseconds || output.length === 0) {
     output.push(`${ms}мс`)
   }
 
   return output.join(' ')
 }
+
+/**
+ * Formats a duration in milliseconds into a compact human-readable string.
+ *
+ * @param {number} range
+ * @param {boolean} [withMS=false]
+ * @returns {string}
+ * @style legacy
+ */
+export const formatTimeRange = (range, withMS) => formatDuration(range, { includeMilliseconds: Boolean(withMS) })

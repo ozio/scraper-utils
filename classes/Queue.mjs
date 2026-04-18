@@ -1,5 +1,8 @@
 import { EventEmitter } from 'node:events'
 
+/**
+ * @style target
+ */
 export class Queue extends EventEmitter {
   static DEFAULT_STREAMS = 5
   static DEFAULT_ERRORS_LIMIT = 20
@@ -12,6 +15,20 @@ export class Queue extends EventEmitter {
   retries = new Map()
   #idleTimer = null
 
+  /**
+   * Builds a queue with configurable concurrency and retries.
+   *
+   * @param {{
+   *   streams?: number,
+   *   errorsLimit?: number,
+   *   process?: Function,
+   *   maxRetries?: number,
+   *   timeoutMs?: number | null,
+   *   idleTimeoutMs?: number | null,
+   *   debugMode?: boolean,
+   * }} [options]
+   * @style target
+   */
   constructor({
     streams = Queue.DEFAULT_STREAMS,
     errorsLimit = Queue.DEFAULT_ERRORS_LIMIT,
@@ -56,9 +73,7 @@ export class Queue extends EventEmitter {
   #withTimeout = (promise, timeoutMs) => {
     return Promise.race([
       promise,
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout exceeded')), timeoutMs)
-      ),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout exceeded')), timeoutMs)),
     ])
   }
 
@@ -81,9 +96,8 @@ export class Queue extends EventEmitter {
     this.#resetIdleTimer()
 
     try {
-      const result = this.timeoutMs != null
-        ? await this.#withTimeout(this.process(item), this.timeoutMs)
-        : await this.process(item)
+      const result =
+        this.timeoutMs != null ? await this.#withTimeout(this.process(item), this.timeoutMs) : await this.process(item)
 
       this.emit('process:finish', { item, result })
       this.queue.delete(item)
@@ -113,6 +127,12 @@ export class Queue extends EventEmitter {
     return this.#runStream()
   }
 
+  /**
+   * Adds one item to the queue.
+   *
+   * @param {any} item
+   * @style target
+   */
   add = (item) => {
     this.queue.add(item)
     this.emit('queue:item-added', { item })
@@ -124,6 +144,12 @@ export class Queue extends EventEmitter {
     }
   }
 
+  /**
+   * Adds many items to the queue.
+   *
+   * @param {any[]} list
+   * @style target
+   */
   addMany = (list) => {
     for (const item of list) {
       this.add(item)
@@ -132,6 +158,13 @@ export class Queue extends EventEmitter {
     this.#resetIdleTimer()
   }
 
+  /**
+   * Starts queue processing.
+   *
+   * @param {any[]} [list]
+   * @returns {Promise<void>}
+   * @style target
+   */
   run = async (list) => {
     if (list) {
       this.addMany(list)

@@ -11,7 +11,14 @@ const formatPrice = (number) => {
   )
 }
 
-export const printPriceTable = (prevValue, nextValue) => {
+/**
+ * Prints a price difference table using named values.
+ *
+ * @param {{ from: Record<string, number>, to: Record<string, number> }} options
+ * @returns {void}
+ * @style target
+ */
+export const printPriceDiff = ({ from, to }) => {
   const keys = [
     'priceDay1HIn',
     'priceDay2HIn',
@@ -34,11 +41,11 @@ export const printPriceTable = (prevValue, nextValue) => {
     let pos = idx % 7
     let shift = idx >= 7
 
-    let p = formatPrice(prevValue[k])
-    let n = formatPrice(nextValue[k])
+    let previous = formatPrice(from[k])
+    let next = formatPrice(to[k])
 
-    p = p === '0к' ? '-' : p
-    n = n === '0к' ? '-' : n
+    previous = previous === '0к' ? '-' : previous
+    next = next === '0к' ? '-' : next
 
     if (pos === 4) {
       rows[shift ? 2 : 0][pos] = chalk.dim('│')
@@ -46,22 +53,20 @@ export const printPriceTable = (prevValue, nextValue) => {
     }
 
     if (pos >= 4) {
-      pos++
+      pos += 1
     }
 
-    if (prevValue[k] !== nextValue[k]) {
-      rows[shift ? 2 : 0][pos] = p.padStart(BLOCK_WIDTH)
+    if (from[k] !== to[k]) {
+      rows[shift ? 2 : 0][pos] = previous.padStart(BLOCK_WIDTH)
       rows[shift ? 3 : 1][pos] =
-        prevValue[k] < nextValue[k]
-          ? chalk.green(`${n}`.padStart(BLOCK_WIDTH))
-          : chalk.red(`${n}`.padStart(BLOCK_WIDTH))
+        from[k] < to[k] ? chalk.green(`${next}`.padStart(BLOCK_WIDTH)) : chalk.red(`${next}`.padStart(BLOCK_WIDTH))
     } else {
-      rows[shift ? 2 : 0][pos] = chalk.dim(p.padStart(BLOCK_WIDTH))
+      rows[shift ? 2 : 0][pos] = chalk.dim(previous.padStart(BLOCK_WIDTH))
       rows[shift ? 3 : 1][pos] = ''.padStart(BLOCK_WIDTH)
     }
 
     if (idx === keys.length - 1) {
-      pos++
+      pos += 1
       rows[shift ? 2 : 0][pos] = chalk.dim('│')
       rows[shift ? 3 : 1][pos] = chalk.dim('│')
     }
@@ -77,3 +82,8 @@ export const printPriceTable = (prevValue, nextValue) => {
   console.log(rows[3].join(' '))
   console.log(chalk.dim(line))
 }
+
+/**
+ * @style legacy
+ */
+export const printPriceTable = (prevValue, nextValue) => printPriceDiff({ from: prevValue, to: nextValue })

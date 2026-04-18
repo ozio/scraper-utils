@@ -1304,6 +1304,7 @@ const emojis = [
  * const badge = emojiHashOf('scraper-utils', {
  *   length: 2,
  * })
+ * @style legacy
  */
 export const emojiHash = (string = undefined, hashLength = 1) => {
   const hash = crypto.createHash('sha256').update(string)
@@ -1327,6 +1328,7 @@ export const emojiHash = (string = undefined, hashLength = 1) => {
  * @param {string} string
  * @param {{ length?: number }} [options]
  * @returns {string}
+ * @style target
  */
 export const emojiHashOf = (string, { length = 1 } = {}) => {
   return emojiHash(string, length)

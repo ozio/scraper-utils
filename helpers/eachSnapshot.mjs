@@ -1,22 +1,9 @@
 import fs from 'fs/promises'
-import { readArchivedFile } from '../fs/gzip.mjs'
+import { readArchive } from '../fs/gzip.mjs'
 
 const PROGRESS_INTERVAL = 2000
 
-/**
- * Iterates through snapshot files in a directory.
- *
- * @param {{
- *   snapshotPath: string,
- *   callback: Function,
- *   onProgress?: Function,
- *   filter?: Function,
- *   shouldReadFile?: boolean,
- *   progressInterval?: number
- * }} options
- * @returns {Promise<void>}
- */
-export const eachSnapshot = async ({
+const iterateSnapshots = async ({
   snapshotPath,
   callback,
   onProgress,
@@ -51,7 +38,7 @@ export const eachSnapshot = async ({
       }, progressInterval)
     : null
 
-  for (; i < total; i++) {
+  for (; i < total; i += 1) {
     const filename = list[i]
 
     if (filename[0] === '.') continue
@@ -64,7 +51,7 @@ export const eachSnapshot = async ({
 
     if (shouldReadFile) {
       if (filename.endsWith('.gz')) {
-        html = await readArchivedFile(absolutePath)
+        html = await readArchive({ from: absolutePath })
       } else {
         html = await fs.readFile(absolutePath, 'utf-8')
       }
@@ -94,17 +81,10 @@ export const eachSnapshot = async ({
  *
  * @param {{ in: string, callback: Function, onProgress?: Function, filter?: Function, shouldReadFile?: boolean, progressInterval?: number }} options
  * @returns {Promise<void>}
- *
- * @example
- * await forEachSnapshot({
- *   in: './snapshots',
- *   callback: async ({ filename }) => {
- *     console.log(filename)
- *   },
- * })
+ * @style target
  */
 export const forEachSnapshot = async ({ in: snapshotPath, ...options }) => {
-  await eachSnapshot({
+  await iterateSnapshots({
     snapshotPath,
     ...options,
   })
@@ -123,11 +103,33 @@ export const forEachSnapshot = async ({ in: snapshotPath, ...options }) => {
  *     console.log(html.length)
  *   },
  * })
+ * @style target
  */
 export const readEachSnapshot = async ({ in: snapshotPath, ...options }) => {
-  await eachSnapshot({
+  await iterateSnapshots({
     snapshotPath,
     shouldReadFile: true,
+    ...options,
+  })
+}
+
+/**
+ * Iterates through snapshot files in a directory.
+ *
+ * @param {{
+ *   snapshotPath: string,
+ *   callback: Function,
+ *   onProgress?: Function,
+ *   filter?: Function,
+ *   shouldReadFile?: boolean,
+ *   progressInterval?: number
+ * }} options
+ * @returns {Promise<void>}
+ * @style legacy
+ */
+export const eachSnapshot = async ({ snapshotPath, ...options }) => {
+  await forEachSnapshot({
+    in: snapshotPath,
     ...options,
   })
 }

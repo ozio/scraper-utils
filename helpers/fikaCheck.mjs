@@ -21,15 +21,13 @@ const check = async (fromMinute, toMinute) => {
 }
 
 /**
- * Waits until the blocked minute range has passed.
+ * Waits until a blocked minute range has passed.
  *
- * When the first argument is a string, it waits until that file appears.
- *
- * @param {number | string} [fromMinute=FIKA_FROM]
- * @param {number} [toMinute=FIKA_TO]
+ * @param {{ fromMinute?: number, toMinute?: number }} [options]
  * @returns {Promise<void>}
+ * @style target
  */
-export const fikaCheck = async (fromMinute = FIKA_FROM, toMinute = FIKA_TO) => {
+export const waitForFika = async ({ fromMinute = FIKA_FROM, toMinute = FIKA_TO } = {}) => {
   if (await check(fromMinute, toMinute)) {
     return Promise.resolve()
   }
@@ -48,16 +46,6 @@ export const fikaCheck = async (fromMinute = FIKA_FROM, toMinute = FIKA_TO) => {
 }
 
 /**
- * Waits until a blocked minute range has passed.
- *
- * @param {{ fromMinute?: number, toMinute?: number }} [options]
- * @returns {Promise<void>}
- */
-export const waitForFika = async ({ fromMinute = FIKA_FROM, toMinute = FIKA_TO } = {}) => {
-  await fikaCheck(fromMinute, toMinute)
-}
-
-/**
  * Waits until a file appears on disk.
  *
  * @param {{ at: string }} options
@@ -67,7 +55,38 @@ export const waitForFika = async ({ fromMinute = FIKA_FROM, toMinute = FIKA_TO }
  * await waitForFile({
  *   at: '/tmp/ready.flag',
  * })
+ * @style target
  */
 export const waitForFile = async ({ at }) => {
-  await fikaCheck(at)
+  if (await check(at)) {
+    return Promise.resolve()
+  }
+
+  return new Promise((resolve) => {
+    const int = setInterval(async () => {
+      if (await check(at)) {
+        clearInterval(int)
+        resolve()
+      }
+    }, 1000)
+  })
+}
+
+/**
+ * Waits until the blocked minute range has passed.
+ *
+ * When the first argument is a string, it waits until that file appears.
+ *
+ * @param {number | string} [fromMinute=FIKA_FROM]
+ * @param {number} [toMinute=FIKA_TO]
+ * @returns {Promise<void>}
+ * @style legacy
+ */
+export const fikaCheck = async (fromMinute = FIKA_FROM, toMinute = FIKA_TO) => {
+  if (typeof fromMinute === 'string') {
+    await waitForFile({ at: fromMinute })
+    return
+  }
+
+  await waitForFika({ fromMinute, toMinute })
 }

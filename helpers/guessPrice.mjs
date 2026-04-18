@@ -448,15 +448,7 @@ const getSurroundings = (input, leftPos, rightPos) => {
   return [leftSide.trim(), rightSide.trim()]
 }
 
-/**
- * Extracts price-like tokens from free-form text.
- *
- * Returns a normalized list of objects with `type`, `value`, and optional `mod`.
- *
- * @param {string} text
- * @returns {Array<{ type: string, value: number | number[], mod?: string }>}
- */
-export const guessPrice = (text) => {
+const extractPrices = (text) => {
   let str = text
 
   let debug = false
@@ -609,7 +601,17 @@ export const guessPrice = (text) => {
  *
  * @param {string} text
  * @returns {Array<{ type: string, value: number | number[], mod?: string }>}
+ * @style target
  */
-export const pricesIn = (text) => {
-  return guessPrice(text)
-}
+export const pricesIn = (text) => extractPrices(text)
+
+/**
+ * Extracts price-like tokens from free-form text.
+ *
+ * Returns a normalized list of objects with `type`, `value`, and optional `mod`.
+ *
+ * @param {string} text
+ * @returns {Array<{ type: string, value: number | number[], mod?: string }>}
+ * @style legacy
+ */
+export const guessPrice = (text) => pricesIn(text)

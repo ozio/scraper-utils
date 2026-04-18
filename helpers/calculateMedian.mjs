@@ -1,15 +1,11 @@
 /**
- * Calculates the median value.
- *
- * The input array is sorted in place before the median is picked.
+ * Calculates the median with a shorter, more readable call shape.
  *
  * @param {number[]} values
  * @returns {number}
- *
- * @example
- * const median = medianOf([1200, 1500, 1800])
+ * @style target
  */
-export const calculateMedian = (values) => {
+export const medianOf = (values) => {
   if (values.length === 0) return 0
 
   values.sort((a, b) => a - b)
@@ -22,11 +18,15 @@ export const calculateMedian = (values) => {
 }
 
 /**
- * Calculates the median with a shorter, more readable call shape.
+ * Calculates the median value.
+ *
+ * The input array is sorted in place before the median is picked.
  *
  * @param {number[]} values
  * @returns {number}
+ *
+ * @example
+ * const median = medianOf([1200, 1500, 1800])
+ * @style legacy
  */
-export const medianOf = (values) => {
-  return calculateMedian(values)
-}
+export const calculateMedian = (values) => medianOf(values)

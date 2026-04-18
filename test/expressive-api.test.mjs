@@ -4,18 +4,18 @@ import os from 'node:os'
 import path from 'node:path'
 
 import {
-  copyFileTo,
+  copyFile,
   ensureDirectory,
-  fileExistsAt,
-  fileSizeAt,
+  fileExists,
+  fileSize,
   listFiles,
-  moveFileTo,
-  readFileFrom,
-  removeDirectoryAt,
-  removeFileAt,
-  writeFileTo,
+  moveFile,
+  readFile,
+  removeDirectory,
+  removeFile,
+  writeFile,
 } from '../fs/file.mjs'
-import { archiveFileFrom, readArchiveFrom, unarchiveFileFrom, writeArchiveTo } from '../fs/gzip.mjs'
+import { archiveFile, readArchive, unarchiveFile, writeArchive } from '../fs/gzip.mjs'
 import { forEachSnapshot, readEachSnapshot } from '../helpers/eachSnapshot.mjs'
 import { readCommandOutput, runCommand } from '../helpers/execAsync.mjs'
 
@@ -32,57 +32,57 @@ describe('expressive api', () => {
     }
   })
 
-  test('writeFileTo and readFileFrom support named paths and directory creation', async () => {
+  test('writeFile and readFile support named paths and directory creation', async () => {
     const filePath = path.join(tempPath, 'letters', 'greeting.txt')
 
-    await writeFileTo('hello', {
+    await writeFile('hello', {
       to: filePath,
       createDirectories: true,
     })
 
-    expect(await readFileFrom({ from: filePath })).toBe('hello')
-    expect(await fileExistsAt({ at: filePath })).toBe(true)
-    expect(await fileSizeAt({ at: filePath })).toBe(5)
+    expect(await readFile({ from: filePath })).toBe('hello')
+    expect(await fileExists({ at: filePath })).toBe(true)
+    expect(await fileSize({ at: filePath })).toBe(5)
   })
 
-  test('copyFileTo and moveFileTo keep call sites readable', async () => {
+  test('copyFile and moveFile keep call sites readable', async () => {
     const sourcePath = path.join(tempPath, 'source.txt')
     const copyPath = path.join(tempPath, 'copies', 'source.txt')
     const movedPath = path.join(tempPath, 'moved', 'source.txt')
 
-    await writeFileTo('robot', { to: sourcePath })
-    await copyFileTo({
+    await writeFile('robot', { to: sourcePath })
+    await copyFile({
       from: sourcePath,
       to: copyPath,
       createDirectories: true,
     })
-    await moveFileTo({
+    await moveFile({
       from: copyPath,
       to: movedPath,
       createDirectories: true,
     })
 
-    expect(await readFileFrom({ from: sourcePath })).toBe('robot')
-    expect(await fileExistsAt({ at: copyPath })).toBe(false)
-    expect(await readFileFrom({ from: movedPath })).toBe('robot')
+    expect(await readFile({ from: sourcePath })).toBe('robot')
+    expect(await fileExists({ at: copyPath })).toBe(false)
+    expect(await readFile({ from: movedPath })).toBe('robot')
   })
 
-  test('ensureDirectory, listFiles, removeFileAt, and removeDirectoryAt compose cleanly', async () => {
+  test('ensureDirectory, listFiles, removeFile, and removeDirectory compose cleanly', async () => {
     const directoryPath = path.join(tempPath, 'notes')
     const alphaPath = path.join(directoryPath, 'alpha.txt')
     const betaPath = path.join(directoryPath, 'beta.txt')
 
     await ensureDirectory({ at: directoryPath })
-    await writeFileTo('a', { to: alphaPath })
-    await writeFileTo('b', { to: betaPath })
+    await writeFile('a', { to: alphaPath })
+    await writeFile('b', { to: betaPath })
 
     expect((await listFiles({ in: directoryPath })).sort()).toEqual([alphaPath, betaPath])
 
-    await removeFileAt({ at: alphaPath })
-    expect(await fileExistsAt({ at: alphaPath })).toBe(false)
+    await removeFile({ at: alphaPath })
+    expect(await fileExists({ at: alphaPath })).toBe(false)
 
-    await removeDirectoryAt({ at: directoryPath })
-    expect(await fileExistsAt({ at: betaPath })).toBe(false)
+    await removeDirectory({ at: directoryPath })
+    expect(await fileExists({ at: betaPath })).toBe(false)
   })
 
   test('archive wrappers keep text workflows pleasant', async () => {
@@ -90,30 +90,30 @@ describe('expressive api', () => {
     const archivePath = path.join(tempPath, 'archives', 'plain.txt.gz')
     const restoredPath = path.join(tempPath, 'restored', 'plain.txt')
 
-    await writeFileTo('compressed hello', { to: sourcePath })
-    await archiveFileFrom({
+    await writeFile('compressed hello', { to: sourcePath })
+    await archiveFile({
       from: sourcePath,
       to: archivePath,
       createDirectories: true,
     })
-    await unarchiveFileFrom({
+    await unarchiveFile({
       from: archivePath,
       to: restoredPath,
       createDirectories: true,
     })
 
-    expect(await readFileFrom({ from: restoredPath })).toBe('compressed hello')
+    expect(await readFile({ from: restoredPath })).toBe('compressed hello')
   })
 
-  test('writeArchiveTo and readArchiveFrom work as a direct text pair', async () => {
+  test('writeArchive and readArchive work as a direct text pair', async () => {
     const archivePath = path.join(tempPath, 'archives', 'message.txt.gz')
 
-    await writeArchiveTo('hello archive', {
+    await writeArchive('hello archive', {
       to: archivePath,
       createDirectories: true,
     })
 
-    expect(await readArchiveFrom({ from: archivePath })).toBe('hello archive')
+    expect(await readArchive({ from: archivePath })).toBe('hello archive')
   })
 
   test('runCommand and readCommandOutput support named working directories', async () => {
@@ -130,13 +130,13 @@ describe('expressive api', () => {
     const read = []
 
     await ensureDirectory({ at: snapshotPath })
-    await writeFileTo('first', {
+    await writeFile('first', {
       to: path.join(snapshotPath, '101.1000.html'),
     })
-    await writeFileTo('second', {
+    await writeFile('second', {
       to: path.join(snapshotPath, '202.2000.html'),
     })
-    await writeFileTo('hidden', {
+    await writeFile('hidden', {
       to: path.join(snapshotPath, '.ignore-me'),
     })
 

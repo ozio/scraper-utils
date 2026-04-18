@@ -49,11 +49,37 @@ const c = (c1, c2, t = THRESHOLD) => {
   return true
 }
 
+/**
+ * @style target
+ */
 export class Image {
   image
   buffer
   meta
 
+  /**
+   * Loads an image wrapper from a file path.
+   *
+   * @param {{ from: string }} options
+   * @returns {Image}
+   * @style target
+   */
+  static load({ from }) {
+    return new Image(from)
+  }
+
+  #applyBuffer = async (buffer, info) => {
+    this.buffer = buffer
+    this.image = sharp(this.buffer)
+    this.meta = info || (await this.image.metadata())
+  }
+
+  /**
+   * Builds an image wrapper from a file path or raw buffer.
+   *
+   * @param {string | Buffer} buffer
+   * @style legacy
+   */
   constructor(buffer) {
     if (typeof buffer === 'string') {
       buffer = fs.readFileSync(buffer)
@@ -63,98 +89,112 @@ export class Image {
     this.image = sharp(this.buffer)
   }
 
-  async getMeta() {
-    return new Promise((resolve, reject) => {
-      if (this.meta) {
-        resolve(this.meta)
-        return
-      }
+  /**
+   * Returns cached image metadata.
+   *
+   * @returns {Promise<import('sharp').Metadata>}
+   * @style target
+   */
+  async metadata() {
+    if (this.meta) {
+      return this.meta
+    }
 
-      this.image
-        .metadata()
-        .then((meta) => {
-          this.meta = meta
-          resolve(this.meta)
-        })
-        .catch(reject)
+    this.meta = await this.image.metadata()
+
+    return this.meta
+  }
+
+  /**
+   * Trims image borders using a color threshold.
+   *
+   * @param {{ threshold?: number }} [options]
+   * @returns {Promise<Image>}
+   * @style target
+   */
+  async trim({ threshold = THRESHOLD } = {}) {
+    const { data, info } = await this.image.trim(threshold).toBuffer({ resolveWithObject: true })
+    await this.#applyBuffer(data, info)
+    return this
+  }
+
+  /**
+   * Resizes the image to a centered square.
+   *
+   * @returns {Promise<Image>}
+   * @style target
+   */
+  async makeSquare() {
+    const { width, height } = await this.metadata()
+    const min = Math.min(width, height)
+    const buffer = await this.image.resize(min, min, { fit: 'cover' }).toBuffer()
+
+    await this.#applyBuffer(buffer)
+    return this
+  }
+
+  async #pixelColor(image, x, y) {
+    const { data } = await image.extract({ width: 1, height: 1, left: x, top: y }).raw().toBuffer({
+      resolveWithObject: true,
     })
+
+    return data.toJSON().data
   }
 
-  async crop(threshold = THRESHOLD) {
-    return new Promise((resolve, reject) => {
-      this.image.trim(threshold).toBuffer((err, buffer, info) => {
-        if (err) reject(err)
-
-        this.buffer = buffer
-        this.meta = { ...this.meta, ...info }
-        resolve(this)
-      })
-    })
-  }
-
-  async square() {
-    const min = Math.min(this.meta.width, this.meta.height)
-
-    this.meta.width = min
-    this.meta.height = min
-
-    await this.image.resize(min, min, { fill: 'cover' })
-
-    this.buffer = await this.image.toBuffer()
-  }
-
-  async getPixelColor(image, x, y) {
-    return new Promise((resolve, reject) => {
-      image
-        .extract({ width: 1, height: 1, left: x, top: y })
-        .raw()
-        .toBuffer({ resolveWithObject: true })
-        .then(({ data }) => {
-          resolve(data.toJSON().data)
-        })
-        .catch(reject)
-    })
-  }
-
+  /**
+   * Detects whether the image has solid borders.
+   *
+   * @returns {Promise<boolean>}
+   * @style target
+   */
   async hasBorders() {
-    const { width, height } = await this.getMeta()
+    const { width, height } = await this.metadata()
 
     const clone = this.image.clone()
 
     let leftTop, rightBottom, rightTop, leftBottom, topMiddle, bottomMiddle, leftMiddle, rightMiddle
 
-    leftTop = await this.getPixelColor(clone, 0, 0)
-    rightBottom = await this.getPixelColor(clone, width - 1, height - 1)
+    leftTop = await this.#pixelColor(clone, 0, 0)
+    rightBottom = await this.#pixelColor(clone, width - 1, height - 1)
 
     if (!c(leftTop, rightBottom)) return false
 
     const color = leftTop
 
-    rightTop = await this.getPixelColor(clone, width - 1, 0)
-    leftBottom = await this.getPixelColor(clone, 0, height - 1)
+    rightTop = await this.#pixelColor(clone, width - 1, 0)
+    leftBottom = await this.#pixelColor(clone, 0, height - 1)
 
     if (!c(rightTop, color) || !c(leftBottom, color)) return false
 
-    topMiddle = await this.getPixelColor(clone, Math.round(width / 2), 0)
-    bottomMiddle = await this.getPixelColor(clone, Math.round(width / 2), height - 1)
-    leftMiddle = await this.getPixelColor(clone, 0, Math.round(height / 2))
-    rightMiddle = await this.getPixelColor(clone, width - 1, Math.round(height / 2))
+    topMiddle = await this.#pixelColor(clone, Math.round(width / 2), 0)
+    bottomMiddle = await this.#pixelColor(clone, Math.round(width / 2), height - 1)
+    leftMiddle = await this.#pixelColor(clone, 0, Math.round(height / 2))
+    rightMiddle = await this.#pixelColor(clone, width - 1, Math.round(height / 2))
 
     if ((c(topMiddle, color) && c(bottomMiddle, color)) || (c(leftMiddle, color) && c(rightMiddle, color))) return true
 
     return false
   }
 
-  /* deprecated */
-  async getHash(complexity) {
-    return this.getPHash(complexity)
-  }
-
-  async getPHash(complexity = HASH_COMPLEXITY) {
+  /**
+   * Returns a perceptual hash for the image.
+   *
+   * @param {{ complexity?: number }} [options]
+   * @returns {Promise<string>}
+   * @style target
+   */
+  async perceptualHash({ complexity = HASH_COMPLEXITY } = {}) {
     return imghash.hash(this.buffer, complexity)
   }
 
-  async getDHash(complexity = HASH_COMPLEXITY) {
+  /**
+   * Returns a difference hash for the image.
+   *
+   * @param {{ complexity?: number }} [options]
+   * @returns {Promise<string>}
+   * @style target
+   */
+  async differenceHash({ complexity = HASH_COMPLEXITY } = {}) {
     const height = complexity
     const width = height + 1
 
@@ -180,23 +220,155 @@ export class Image {
       })
   }
 
-  async getDominantColor() {
+  /**
+   * Returns the dominant image color.
+   *
+   * @returns {Promise<{ r: number, g: number, b: number }>}
+   * @style target
+   */
+  async dominantColor() {
     const { dominant } = await this.image.stats()
 
     return dominant
   }
 
-  async getAverageColor() {
-    const color = await this.getPixelColor(this.image.clone().resize(1, 1, 'fit'), 0, 0)
+  /**
+   * Returns the average image color.
+   *
+   * @returns {Promise<{ r: number, g: number, b: number }>}
+   * @style target
+   */
+  async averageColor() {
+    const color = await this.#pixelColor(this.image.clone().resize(1, 1, { fit: 'fill' }), 0, 0)
 
     return { r: color[0], g: color[1], b: color[2] }
   }
 
-  async getDimentions() {
-    return { width: this.meta.width, height: this.meta.height }
+  /**
+   * Returns current image dimensions.
+   *
+   * @returns {Promise<{ width: number, height: number }>}
+   * @style target
+   */
+  async dimensions() {
+    const { width, height } = await this.metadata()
+
+    return { width, height }
   }
 
+  /**
+   * Returns the current image aspect ratio.
+   *
+   * @returns {Promise<number>}
+   * @style target
+   */
+  async aspectRatio() {
+    const { width, height } = await this.metadata()
+
+    return width / height
+  }
+
+  /**
+   * Returns cached image metadata.
+   *
+   * @returns {Promise<import('sharp').Metadata>}
+   * @style legacy
+   */
+  async getMeta() {
+    return this.metadata()
+  }
+
+  /**
+   * Trims image borders using a color threshold.
+   *
+   * @param {number} threshold
+   * @returns {Promise<Image>}
+   * @style legacy
+   */
+  async crop(threshold = THRESHOLD) {
+    return this.trim({ threshold })
+  }
+
+  /**
+   * Resizes the image to a centered square.
+   *
+   * @returns {Promise<Image>}
+   * @style legacy
+   */
+  async square() {
+    return this.makeSquare()
+  }
+
+  /**
+   * Returns a perceptual hash for the image.
+   *
+   * @param {number} complexity
+   * @returns {Promise<string>}
+   * @style legacy
+   */
+  async getHash(complexity) {
+    return this.perceptualHash({ complexity })
+  }
+
+  /**
+   * Returns a perceptual hash for the image.
+   *
+   * @param {number} complexity
+   * @returns {Promise<string>}
+   * @style legacy
+   */
+  async getPHash(complexity = HASH_COMPLEXITY) {
+    return this.perceptualHash({ complexity })
+  }
+
+  /**
+   * Returns a difference hash for the image.
+   *
+   * @param {number} complexity
+   * @returns {Promise<string>}
+   * @style legacy
+   */
+  async getDHash(complexity = HASH_COMPLEXITY) {
+    return this.differenceHash({ complexity })
+  }
+
+  /**
+   * Returns the dominant image color.
+   *
+   * @returns {Promise<{ r: number, g: number, b: number }>}
+   * @style legacy
+   */
+  async getDominantColor() {
+    return this.dominantColor()
+  }
+
+  /**
+   * Returns the average image color.
+   *
+   * @returns {Promise<{ r: number, g: number, b: number }>}
+   * @style legacy
+   */
+  async getAverageColor() {
+    return this.averageColor()
+  }
+
+  /**
+   * Returns current image dimensions.
+   *
+   * @returns {Promise<{ width: number, height: number }>}
+   * @style legacy
+   */
+  async getDimentions() {
+    return this.dimensions()
+  }
+
+  /**
+   * Returns the current image aspect ratio.
+   *
+   * @returns {Promise<number>}
+   * @style legacy
+   */
   async getRatio() {
-    return this.meta.width / this.meta.height
+    return this.aspectRatio()
   }
 }

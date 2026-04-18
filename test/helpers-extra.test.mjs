@@ -14,8 +14,8 @@ import { getYearByICId, getYearById, getYearByRDId, yearForId } from '../helpers
 import { guessPrice, pricesIn } from '../helpers/guessPrice.mjs'
 import { resolveProxy } from '../helpers/prepareProxy.mjs'
 import { REGEX_INSIDE_ROUND_BRACKETS, REGEX_NON_NUMBERS } from '../helpers/regex.mjs'
-import { writeArchiveTo } from '../fs/gzip.mjs'
-import { ensureDirectory, writeFileTo } from '../fs/file.mjs'
+import { writeArchive } from '../fs/gzip.mjs'
+import { ensureDirectory, writeFile } from '../fs/file.mjs'
 
 describe('helper units', () => {
   const originalArgv = [...argv]
@@ -157,10 +157,10 @@ describe('helper units', () => {
     const seen = []
 
     await ensureDirectory({ at: snapshotPath })
-    await writeFileTo('plain', {
+    await writeFile('plain', {
       to: path.join(snapshotPath, '101.1000.html'),
     })
-    await writeArchiveTo('archived', {
+    await writeArchive('archived', {
       to: path.join(snapshotPath, '202.2000.gz'),
     })
 

@@ -1,12 +1,7 @@
 import { promisify } from 'util'
 import { exec } from 'child_process'
 
-/**
- * Promisified `child_process.exec`.
- *
- * @type {(command: string, options?: import('child_process').ExecOptions) => Promise<{ stdout: string, stderr: string }>}
- */
-export const execAsync = promisify(exec)
+const execCommand = promisify(exec)
 
 /**
  * Runs a shell command with an optional working directory.
@@ -19,9 +14,10 @@ export const execAsync = promisify(exec)
  * const { stdout } = await runCommand('pwd', {
  *   in: '/tmp',
  * })
+ * @style target
  */
 export const runCommand = async (command, { in: cwd, ...options } = {}) => {
-  return execAsync(command, cwd ? { cwd, ...options } : options)
+  return execCommand(command, cwd ? { cwd, ...options } : options)
 }
 
 /**
@@ -30,8 +26,17 @@ export const runCommand = async (command, { in: cwd, ...options } = {}) => {
  * @param {string} command
  * @param {import('child_process').ExecOptions} [options]
  * @returns {Promise<string>}
+ * @style target
  */
 export const readCommandOutput = async (command, options = {}) => {
   const { stdout } = await runCommand(command, options)
   return stdout
 }
+
+/**
+ * Promisified `child_process.exec`.
+ *
+ * @type {(command: string, options?: import('child_process').ExecOptions) => Promise<{ stdout: string, stderr: string }>}
+ * @style legacy
+ */
+export const execAsync = execCommand

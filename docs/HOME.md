@@ -6,7 +6,7 @@ This site is generated from the repo itself:
 
 - `JSDoc` from exported utilities
 - markdown guides from the `docs/` folder
-- the current API shapes that are meant to be actually used
+- explicit `target` and `legacy` style metadata from exported utilities
 
 ## What lives here
 
@@ -16,12 +16,22 @@ This site is generated from the repo itself:
 - formatting and validation helpers
 - queue and text classes
 
+## Docs modes
+
+The generated docs now separate public APIs into two styles:
+
+- `Target Style` is the preferred style for new code.
+- `Legacy Style` is older public API that still exists, but is not the default direction.
+- `Both` shows the split side by side when you want to compare or migrate.
+
+The global selector in the sidebar controls which style the docs emphasize. The default is `Target Style`.
+
 ## Taste
 
 This repo likes APIs that read like intent.
 
 ```js
-await writeFileTo('hello', {
+await writeFile('hello', {
   to: '/tmp/greeting.txt',
   createDirectories: true,
 })

@@ -17,6 +17,9 @@ ansiHTML.setColors({
   darkgrey: '646464',
 })
 
+/**
+ * @style target
+ */
 export const sendMail = async ({
   to,
   from,

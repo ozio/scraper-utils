@@ -6,6 +6,9 @@ import AbortController from 'abort-controller'
 const conv = Iconv('windows-1251', 'utf8')
 const TIMEOUT = 15000
 
+/**
+ * @style legacy
+ */
 export const goto = async (url, proxy) => {
   const opts = {
     headers: {
@@ -83,6 +86,7 @@ export const goto = async (url, proxy) => {
  * const page = await fetchPage({
  *   at: 'https://example.com',
  * })
+ * @style target
  */
 export const fetchPage = async ({ at, proxy } = {}) => {
   return goto(at, proxy)
@@ -98,6 +102,7 @@ export const fetchPage = async ({ at, proxy } = {}) => {
  * const html = await readPage({
  *   at: 'https://example.com',
  * })
+ * @style target
  */
 export const readPage = async ({ at, proxy } = {}) => {
   const { body } = await fetchPage({ at, proxy })

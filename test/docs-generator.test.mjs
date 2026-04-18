@@ -9,6 +9,7 @@ import {
   buildDocs,
   getDocumentedItemCount,
   parseClassMembers,
+  parseExports,
   parseJsdoc,
   renderNavigation,
   stripLeadingTitle,
@@ -42,6 +43,7 @@ describe('docs generator', () => {
  * @since 1.0.0
  * @version 1.2.3
  * @date 2026-04-17
+ * @style target
  */`)
 
     expect(docs.params).toEqual([
@@ -58,6 +60,39 @@ describe('docs generator', () => {
     expect(docs.since).toBe('1.0.0')
     expect(docs.version).toBe('1.2.3')
     expect(docs.date).toBe('2026-04-17')
+    expect(docs.style).toBe('target')
+  })
+
+  test('parseExports preserves style metadata and rejects missing export or member styles', async () => {
+    const exports = await parseExports('helpers/calculateAverage.mjs')
+
+    expect(exports.map((item) => [item.name, item.docs.style]).sort()).toEqual([
+      ['averageOf', 'target'],
+      ['calculateAverage', 'legacy'],
+    ])
+
+    const tempPath = path.join(ROOT, '__docs-style-fixture__.mjs')
+
+    await fs.writeFile(tempPath, `/**\n * Missing style on purpose.\n */\nexport const missingStyle = () => true\n`)
+
+    try {
+      await expect(parseExports('__docs-style-fixture__.mjs')).rejects.toThrow('Missing @style')
+    } finally {
+      await fs.rm(tempPath, { force: true })
+    }
+
+    const memberFixturePath = path.join(ROOT, '__docs-member-style-fixture__.mjs')
+
+    await fs.writeFile(
+      memberFixturePath,
+      `/**\n * @style target\n */\nexport class MissingMemberStyle {\n  /**\n   * Missing member style on purpose.\n   */\n  value() {\n    return true\n  }\n}\n`
+    )
+
+    try {
+      await expect(parseExports('__docs-member-style-fixture__.mjs')).rejects.toThrow('Missing @style for member')
+    } finally {
+      await fs.rm(memberFixturePath, { force: true })
+    }
   })
 
   test('parseClassMembers captures public fields, constructor, methods, and skips private members', () => {
@@ -125,20 +160,19 @@ describe('docs generator', () => {
       getDocumentedItemCount([
         {
           docs: parseJsdoc('/** Top-level docs. */'),
-          members: [
-            { docs: parseJsdoc('/** Member docs. */') },
-            { docs: parseJsdoc(null) },
-          ],
+          members: [{ docs: parseJsdoc('/** Member docs. */') }, { docs: parseJsdoc(null) }],
         },
       ])
     ).toBe(2)
   })
 
-  test('buildDocs generates theme controls, active navigation, and class members', async () => {
+  test('buildDocs generates theme controls, active navigation, and target/legacy member sections', async () => {
     await buildDocs()
 
     const packageJson = JSON.parse(await fs.readFile(path.join(ROOT, 'package.json'), 'utf-8'))
     const queuePage = await fs.readFile(path.join(ROOT, 'site/api/classes-Queue.html'), 'utf-8')
+    const textPage = await fs.readFile(path.join(ROOT, 'site/api/classes-Text.html'), 'utf-8')
+    const averagePage = await fs.readFile(path.join(ROOT, 'site/api/helpers-calculateAverage.html'), 'utf-8')
     const homePage = await fs.readFile(path.join(ROOT, 'site/index.html'), 'utf-8')
     const stylesheet = await fs.readFile(path.join(ROOT, 'site/assets/style.css'), 'utf-8')
 
@@ -146,14 +180,35 @@ describe('docs generator', () => {
     expect(queuePage).toContain('aria-current="page"')
     expect(queuePage).toContain('Members</h3>')
     expect(queuePage).toContain('constructor')
-    expect(queuePage).toContain('DEFAULT_STREAMS')
     expect(queuePage).toContain('addMany')
+    expect(queuePage).toContain('data-api-style-select')
+    expect(queuePage).toContain('data-style-section-kind="member"')
+    expect(textPage).toContain('hash')
+    expect(textPage).toContain('similarity')
+    expect(textPage).toContain('compare')
+    expect(textPage).toContain('data-style-section="target"')
+    expect(textPage).toContain('data-style-section="legacy"')
+    expect(textPage).toContain('style-badge-target')
+    expect(textPage).toContain('style-badge-legacy')
+    expect(averagePage).toContain('data-style-section="target"')
+    expect(averagePage).toContain('data-style-section="legacy"')
+    expect(averagePage).toContain('style-badge-target')
+    expect(averagePage).toContain('style-badge-legacy')
     expect(homePage).toContain(packageJson.description)
     expect(homePage).toContain('data-nav-search')
     expect(homePage).toContain('data-theme-select')
+    expect(homePage).toContain('data-api-style-select')
+    expect(homePage).toContain('Target Style Exports')
+    expect(homePage).toContain('Legacy Style Exports')
+    expect(homePage).toContain('data-module-card')
     expect(stylesheet).toContain(":root[data-theme='dark']")
+    expect(stylesheet).toContain('.style-badge-target')
+    expect(stylesheet).toContain('.member-style-section')
     expect(THEME_BOOTSTRAP_SCRIPT).toContain('scraper-utils-docs-theme')
+    expect(THEME_BOOTSTRAP_SCRIPT).toContain('scraper-utils-docs-api-style')
     expect(PAGE_BEHAVIOR_SCRIPT).toContain('scrollIntoView')
     expect(PAGE_BEHAVIOR_SCRIPT).toContain('applyNavigationFilter')
+    expect(PAGE_BEHAVIOR_SCRIPT).toContain('applyApiStyleMode')
+    expect(PAGE_BEHAVIOR_SCRIPT).toContain('data-style-section-kind="member"')
   })
 })

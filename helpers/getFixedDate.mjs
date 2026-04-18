@@ -8,6 +8,7 @@
  *
  * @example
  * const fixedAt = roundDateToHour(new Date())
+ * @style target
  */
 export const getFixedDate = (date = new Date()) => {
   const fixedAt = new Date(date)
@@ -28,6 +29,7 @@ export const getFixedDate = (date = new Date()) => {
  *
  * @param {Date} [date=new Date()]
  * @returns {Date}
+ * @style target
  */
 export const roundDateToHour = (date = new Date()) => {
   return getFixedDate(date)

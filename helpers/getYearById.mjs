@@ -1,17 +1,6 @@
 import { icIdRangesByYear } from '../constants/ic.mjs'
 
-/**
- * Guesses the year for an item id on a supported platform.
- *
- * Supported platforms:
- * - `ic`
- * - `rd`
- *
- * @param {'ic' | 'rd'} platform
- * @param {number} id
- * @returns {number | undefined}
- */
-export const getYearById = (platform, id) => {
+const guessYear = ({ platform, id }) => {
   if (platform === 'rd') return 2022
 
   if (platform === 'ic') {
@@ -36,6 +25,20 @@ export const getYearById = (platform, id) => {
 }
 
 /**
+ * Guesses the year for an item id on a supported platform.
+ *
+ * Supported platforms:
+ * - `ic`
+ * - `rd`
+ *
+ * @param {'ic' | 'rd'} platform
+ * @param {number} id
+ * @returns {number | undefined}
+ * @style legacy
+ */
+export const getYearById = (platform, id) => guessYear({ platform, id })
+
+/**
  * Guesses the year for an item id using named options.
  *
  * @param {{ platform: 'ic' | 'rd', id: number }} options
@@ -46,9 +49,10 @@ export const getYearById = (platform, id) => {
  *   platform: 'ic',
  *   id: 125001,
  * })
+ * @style target
  */
 export const yearForId = ({ platform, id }) => {
-  return getYearById(platform, id)
+  return guessYear({ platform, id })
 }
 
 /**
@@ -56,13 +60,15 @@ export const yearForId = ({ platform, id }) => {
  *
  * @param {number} id
  * @returns {number | undefined}
+ * @style target
  */
-export const getYearByICId = (id) => getYearById('ic', id)
+export const getYearByICId = (id) => yearForId({ platform: 'ic', id })
 
 /**
  * Guesses the year for an RD id.
  *
  * @param {number} id
  * @returns {number | undefined}
+ * @style target
  */
-export const getYearByRDId = (id) => getYearById('rd', id)
+export const getYearByRDId = (id) => yearForId({ platform: 'rd', id })

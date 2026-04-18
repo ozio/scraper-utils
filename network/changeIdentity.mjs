@@ -4,12 +4,19 @@ import chalk from 'chalk'
 import { SocksProxyAgent } from 'socks-proxy-agent'
 import emojis from '../jsons/countryEmoji.json' assert { type: 'json' }
 
-export const changeIdentity = async (port = '9050') => {
-  const agent = new SocksProxyAgent(`socks5://127.0.0.1:${port}`)
+/**
+ * Rotates the Tor identity for the local SOCKS proxy.
+ *
+ * @param {{ atPort?: string }} [options]
+ * @returns {Promise<void>}
+ * @style target
+ */
+export const rotateTorIdentity = async ({ atPort = '9050' } = {}) => {
+  const agent = new SocksProxyAgent(`socks5://127.0.0.1:${atPort}`)
 
   let lineLength = 0
 
-  child_process.execSync(`lsof -i :${port} -P -n | grep LISTEN | awk '{print $2}' | xargs -n1 kill -HUP`)
+  child_process.execSync(`lsof -i :${atPort} -P -n | grep LISTEN | awk '{print $2}' | xargs -n1 kill -HUP`)
 
   let ip = ''
 
@@ -47,3 +54,8 @@ export const changeIdentity = async (port = '9050') => {
   console.log()
   console.log(border)
 }
+
+/**
+ * @style legacy
+ */
+export const changeIdentity = async (port = '9050') => rotateTorIdentity({ atPort: port })

@@ -82,7 +82,7 @@ describe('classes', () => {
     expect(page.root.querySelector('p')?.text).toBe('Updated')
   })
 
-  test('Page#getData warns and returns an empty object by default', () => {
+  test('Page exposes data() as the target API and keeps getData() as a legacy wrapper', () => {
     const page = new Page({
       url: 'https://example.com',
       html: '<div></div>',
@@ -96,6 +96,7 @@ describe('classes', () => {
         warnings.push(message)
       }
 
+      expect(page.data()).toEqual({})
       expect(page.getData()).toEqual({})
       expect(warnings).toEqual(['Warning: getData() method is empty'])
     } finally {
@@ -103,27 +104,31 @@ describe('classes', () => {
     }
   })
 
-  test('Text caches hashes, compares similarity, and stringifies back to the source text', () => {
+  test('Text exposes target hash()/similarity() helpers and preserves legacy wrappers', () => {
     const text = new Text('hello world')
-    const firstHash = text.getHash()
-    const secondHash = text.getHash()
+    const firstHash = text.hash()
+    const secondHash = text.hash()
 
     expect(firstHash).toBe(secondHash)
+    expect(text.similarity('hello world')).toBe(1)
+    expect(text.similarity('completely different')).toBeLessThan(1)
+    expect(text.getHash()).toBe(firstHash)
     expect(text.compare('hello world')).toBe(1)
-    expect(text.compare('completely different')).toBeLessThan(1)
     expect(text.toString()).toBe('hello world')
   })
 
-  test('TimeLeft keeps only the latest 100 records and computes average and median projections', () => {
+  test('TimeLeft keeps only the latest 100 records and computes target average/median projections', () => {
     const timeLeft = new TimeLeft()
 
     for (let index = 1; index <= 105; index += 1) {
-      timeLeft.add(index)
+      timeLeft.record(index)
     }
 
     expect(timeLeft.records).toHaveLength(100)
     expect(timeLeft.records[0]).toBe(6)
     expect(timeLeft.records.at(-1)).toBe(105)
+    expect(timeLeft.averageFor({ itemsLeft: 2 })).toBe(111)
+    expect(timeLeft.medianFor({ itemsLeft: 2 })).toBe(111)
     expect(timeLeft.getAverage(2)).toBe(111)
     expect(timeLeft.getMedian(2)).toBe(111)
   })
@@ -210,27 +215,33 @@ describe('classes', () => {
     expect(queue.queue.has('second')).toBe(true)
   })
 
-  test('Video derives basic info from metadata and caches content hashes', async () => {
-    const video = new Video('/tmp/video.mp4', Buffer.from('hello'))
-
-    video.getMeta = async () => ({
-      format: { duration: '12.6' },
-      streams: [
-        { codec_type: 'audio' },
-        { codec_type: 'video', width: 1920, height: 1080 },
-      ],
+  test('Video exposes target factories and methods while preserving legacy wrappers', async () => {
+    const video = Video.load({
+      filePath: '/tmp/video.mp4',
+      buffer: Buffer.from('hello'),
     })
 
+    video.metadata = async () => ({
+      format: { duration: '12.6' },
+      streams: [{ codec_type: 'audio' }, { codec_type: 'video', width: 1920, height: 1080 }],
+    })
+
+    expect(await video.basicInfo()).toEqual({
+      duration: 13,
+      width: 1920,
+      height: 1080,
+    })
+    expect(await video.hash()).toBe('5d41402abc4b2a76b9719d911017c592')
+    expect(await video.hash()).toBe('5d41402abc4b2a76b9719d911017c592')
     expect(await video.getBasicInfo()).toEqual({
       duration: 13,
       width: 1920,
       height: 1080,
     })
     expect(await video.getHash()).toBe('5d41402abc4b2a76b9719d911017c592')
-    expect(await video.getHash()).toBe('5d41402abc4b2a76b9719d911017c592')
   })
 
-  test('Image reads metadata from buffers and file paths', async () => {
+  test('Image reads metadata from buffers and target load({ from }) paths', async () => {
     const buffer = await createSolidPng({
       width: 3,
       height: 3,
@@ -241,19 +252,20 @@ describe('classes', () => {
     await writeFile(filePath, buffer)
 
     const fromBuffer = new Image(buffer)
-    const fromPath = new Image(filePath)
+    const fromPath = Image.load({ from: filePath })
 
-    expect((await fromBuffer.getMeta()).width).toBe(3)
+    expect((await fromBuffer.metadata()).width).toBe(3)
+    expect((await fromPath.metadata()).height).toBe(3)
     expect((await fromPath.getMeta()).height).toBe(3)
   })
 
-  test('Image exposes average color, crop, square, dimensions, ratio, and dHash', async () => {
+  test('Image exposes target image helpers and keeps legacy wrappers working', async () => {
     const bordered = new Image(await createBorderedPng())
 
-    await bordered.getMeta()
-    await bordered.crop(1)
+    await bordered.metadata()
+    await bordered.trim({ threshold: 1 })
 
-    expect(await bordered.getDimentions()).toEqual({
+    expect(await bordered.dimensions()).toEqual({
       width: 3,
       height: 3,
     })
@@ -266,21 +278,28 @@ describe('classes', () => {
       })
     )
 
-    await red.getMeta()
+    await red.metadata()
 
+    expect(await red.averageColor()).toEqual({
+      r: 255,
+      g: 0,
+      b: 0,
+    })
+    expect(await red.differenceHash({ complexity: 4 })).toBe('0')
+
+    await red.makeSquare()
+
+    expect(await red.dimensions()).toEqual({
+      width: 2,
+      height: 2,
+    })
+    expect(await red.aspectRatio()).toBe(1)
     expect(await red.getAverageColor()).toEqual({
       r: 255,
       g: 0,
       b: 0,
     })
     expect(await red.getDHash(4)).toBe('0')
-
-    await red.square()
-
-    expect(await red.getDimentions()).toEqual({
-      width: 2,
-      height: 2,
-    })
     expect(await red.getRatio()).toBe(1)
   })
 })

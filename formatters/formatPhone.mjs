@@ -3,6 +3,7 @@
  *
  * @param {number | string} int
  * @returns {string}
+ * @style target
  */
 export const formatPhone = (int) => {
   const s = int.toString()

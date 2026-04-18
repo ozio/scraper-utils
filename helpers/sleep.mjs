@@ -1,14 +1,15 @@
 const SECOND = 1000
 
 /**
- * Sleeps for the given amount of milliseconds.
+ * Sleeps for the given amount of milliseconds with a more explicit name.
  *
  * Uses a long-timer loop for sleeps longer than one second.
  *
  * @param {number} [ms=100]
  * @returns {Promise<void>}
+ * @style target
  */
-export const sleep = (ms = 100) =>
+export const sleepFor = (ms = 100) =>
   new Promise((resolve) => {
     if (ms < SECOND) {
       setTimeout(resolve, ms)
@@ -31,9 +32,10 @@ export const sleep = (ms = 100) =>
   })
 
 /**
- * Sleeps for the given amount of milliseconds with a more explicit name.
+ * Sleeps for the given amount of milliseconds.
  *
  * @param {number} [ms=100]
  * @returns {Promise<void>}
+ * @style legacy
  */
-export const sleepFor = (ms = 100) => sleep(ms)
+export const sleep = (ms = 100) => sleepFor(ms)

@@ -7,7 +7,7 @@ import progress from 'progress-stream'
 import { streamToString as toString } from '../helpers/streamToString.mjs'
 import { ensureParentDirectory } from './file.mjs'
 
-export const archiveFile = async (inputPath, { outputPath, onProgress, removeOriginalFile } = {}) => {
+const archiveFileAtPath = async (inputPath, { outputPath, onProgress, removeOriginalFile } = {}) => {
   const gzip = createGzip()
   const source = createReadStream(inputPath)
   const destination = createWriteStream(outputPath ? outputPath : `${inputPath}.gz`)
@@ -32,7 +32,7 @@ export const archiveFile = async (inputPath, { outputPath, onProgress, removeOri
   }
 }
 
-export const unarchiveFile = async (inputPath, { outputPath, onProgress, removeOriginalFile } = {}) => {
+const unarchiveFileAtPath = async (inputPath, { outputPath, onProgress, removeOriginalFile } = {}) => {
   const ungzip = createGunzip()
   const source = createReadStream(inputPath)
   const destination = createWriteStream(outputPath ? outputPath : inputPath.slice(0, -3))
@@ -57,7 +57,7 @@ export const unarchiveFile = async (inputPath, { outputPath, onProgress, removeO
   }
 }
 
-export const writeArchivedFile = async (outputPath, contents) => {
+const writeArchivedFileAtPath = async (outputPath, contents) => {
   const fromString = Readable.from([contents])
   const gzip = createGzip()
   const destination = createWriteStream(outputPath)
@@ -65,7 +65,7 @@ export const writeArchivedFile = async (outputPath, contents) => {
   await pipeline(fromString, gzip, destination)
 }
 
-export const readArchivedFile = async (inputPath) => {
+const readArchivedFileAtPath = async (inputPath) => {
   const source = createReadStream(inputPath)
   const ungzip = createGunzip()
 
@@ -79,12 +79,13 @@ export const readArchivedFile = async (inputPath) => {
  * @returns {Promise<void>}
  *
  * @example
- * await archiveFileFrom({
+ * await archiveFile({
  *   from: '/tmp/report.html',
  *   to: '/tmp/report.html.gz',
  * })
+ * @style target
  */
-export const archiveFileFrom = async ({
+export const archiveFile = async ({
   from,
   to,
   onProgress,
@@ -97,7 +98,7 @@ export const archiveFileFrom = async ({
     await ensureParentDirectory({ for: outputPath })
   }
 
-  await archiveFile(from, {
+  await archiveFileAtPath(from, {
     outputPath,
     onProgress,
     removeOriginalFile,
@@ -109,8 +110,9 @@ export const archiveFileFrom = async ({
  *
  * @param {{ from: string, to?: string, onProgress?: Function, removeOriginalFile?: boolean, createDirectories?: boolean }} options
  * @returns {Promise<void>}
+ * @style target
  */
-export const unarchiveFileFrom = async ({
+export const unarchiveFile = async ({
   from,
   to,
   onProgress,
@@ -123,7 +125,7 @@ export const unarchiveFileFrom = async ({
     await ensureParentDirectory({ for: outputPath })
   }
 
-  await unarchiveFile(from, {
+  await unarchiveFileAtPath(from, {
     outputPath,
     onProgress,
     removeOriginalFile,
@@ -136,13 +138,14 @@ export const unarchiveFileFrom = async ({
  * @param {string} contents
  * @param {{ to: string, createDirectories?: boolean }} options
  * @returns {Promise<void>}
+ * @style target
  */
-export const writeArchiveTo = async (contents, { to, createDirectories = false } = {}) => {
+export const writeArchive = async (contents, { to, createDirectories = false } = {}) => {
   if (createDirectories) {
     await ensureParentDirectory({ for: to })
   }
 
-  await writeArchivedFile(to, contents)
+  await writeArchivedFileAtPath(to, contents)
 }
 
 /**
@@ -152,10 +155,11 @@ export const writeArchiveTo = async (contents, { to, createDirectories = false }
  * @returns {Promise<string>}
  *
  * @example
- * const html = await readArchiveFrom({
+ * const html = await readArchive({
  *   from: '/tmp/report.html.gz',
  * })
+ * @style target
  */
-export const readArchiveFrom = async ({ from } = {}) => {
-  return readArchivedFile(from)
+export const readArchive = async ({ from } = {}) => {
+  return readArchivedFileAtPath(from)
 }

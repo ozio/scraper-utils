@@ -4,6 +4,9 @@ import { SocksProxyAgent } from 'socks-proxy-agent'
 import AbortController from 'abort-controller'
 import fetch from 'node-fetch'
 
+/**
+ * @style target
+ */
 export class Navigator extends EventEmitter {
   static DEFAULT_TIMEOUT = 15000
 
@@ -23,7 +26,7 @@ export class Navigator extends EventEmitter {
   opts = {
     headers: {
       'user-agent': 'Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0',
-      'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
       'accept-language': 'en-US,en;q=0.5',
       'sec-fetch-dest': 'document',
       'sec-fetch-mode': 'navigate',
@@ -39,15 +42,21 @@ export class Navigator extends EventEmitter {
     credentials: 'omit',
   }
 
-  constructor({
-    proxy,
-    encoding,
-    headers,
-    label,
-    cookies,
-    processCookies,
-    timeout = Navigator.DEFAULT_TIMEOUT,
-  }) {
+  /**
+   * Builds a page navigator with optional proxy, encoding, and cookie support.
+   *
+   * @param {{
+   *   proxy?: string,
+   *   encoding?: string,
+   *   headers?: Record<string, string>,
+   *   label?: string,
+   *   cookies?: string,
+   *   processCookies?: Function,
+   *   timeout?: number,
+   * }} options
+   * @style target
+   */
+  constructor({ proxy, encoding, headers, label, cookies, processCookies, timeout = Navigator.DEFAULT_TIMEOUT }) {
     super()
 
     this.label = label
@@ -68,34 +77,43 @@ export class Navigator extends EventEmitter {
       }
     }
 
-    if (proxy) {
-      this.opts.agent = new SocksProxyAgent(proxy)
-    }
+    this.agent = proxy ? new SocksProxyAgent(proxy) : undefined
 
     if (cookies) {
       this.opts.headers.cookie = cookies
     }
 
-    this.initStats()
+    this.#initStats()
   }
 
-  initStats() {
+  #initStats() {
     this.on('page-open:finish', ({ size }) => {
       this.stats.pages++
       this.stats.bytes += size
     })
   }
 
-  async go(url, shouldRetry) {
-    this.emit('page-open:start', { label: this.label, url })
+  /**
+   * Opens a page and returns its response payload.
+   *
+   * @param {{ at: string, retry?: boolean }} [options]
+   * @returns {Promise<{ label?: string, url: string, status: number, size: number, body: string }>}
+   * @style target
+   */
+  async open({ at, retry = false } = {}) {
+    this.emit('page-open:start', { label: this.label, url: at })
 
-    const opts = this.opts
-
-    if (url.includes('intimcity.nl')) {
-      opts.headers.authority = 'www.intimcity.nl'
+    const opts = {
+      ...this.opts,
+      headers: {
+        ...this.opts.headers,
+      },
+      agent: this.agent,
     }
 
-    opts.agent = this.agent
+    if (at.includes('intimcity.nl')) {
+      opts.headers.authority = 'www.intimcity.nl'
+    }
 
     const controller = new AbortController()
     opts.signal = controller.signal
@@ -105,27 +123,24 @@ export class Navigator extends EventEmitter {
     let res
 
     try {
-      res = await fetch(url, opts)
+      res = await fetch(at, opts)
 
       console.log(res.headers.get('set-cookie'))
 
       if (this.processCookies && res.headers.get('set-cookie')) {
-        this.opts.headers.cookie = this.processCookies(
-          this.opts.headers.cookie,
-          res.headers.get('set-cookie'),
-        )
+        this.opts.headers.cookie = this.processCookies(this.opts.headers.cookie, res.headers.get('set-cookie'))
       }
 
       if (!res.ok) {
         throw new Error(`${res.statusText} (${res.status})`)
       }
     } catch (error) {
-      const errorPayload = { label: this.label, url, error }
+      const errorPayload = { label: this.label, url: at, error }
 
-      if (shouldRetry) {
+      if (retry) {
         this.emit('page-open:retry', errorPayload)
 
-        return this.go(url, shouldRetry)
+        return this.open({ at, retry })
       }
 
       this.emit('page-open:error', errorPayload)
@@ -155,7 +170,7 @@ export class Navigator extends EventEmitter {
 
     const data = {
       label: this.label,
-      url,
+      url: at,
       status,
       size,
       body,
@@ -166,13 +181,41 @@ export class Navigator extends EventEmitter {
     return data
   }
 
-  async getIP() {
+  /**
+   * Returns the current public IP address.
+   *
+   * @returns {Promise<string>}
+   * @style target
+   */
+  async ipAddress() {
     if (this.ip) return this.ip
 
-    const { body } = await this.go('https://api.ipify.org/')
+    const { body } = await this.open({ at: 'https://api.ipify.org/' })
 
     this.ip = body
 
     return this.ip
+  }
+
+  /**
+   * Opens a page and returns its response payload.
+   *
+   * @param {string} url
+   * @param {boolean} shouldRetry
+   * @returns {Promise<{ label?: string, url: string, status: number, size: number, body: string }>}
+   * @style legacy
+   */
+  async go(url, shouldRetry) {
+    return this.open({ at: url, retry: shouldRetry })
+  }
+
+  /**
+   * Returns the current public IP address.
+   *
+   * @returns {Promise<string>}
+   * @style legacy
+   */
+  async getIP() {
+    return this.ipAddress()
   }
 }

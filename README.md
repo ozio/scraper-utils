@@ -15,19 +15,13 @@ This package is ESM-only and targets Node.js 18+.
 You can import from the package root:
 
 ```js
-import {
-  writeFileTo,
-  readFileFrom,
-  readPage,
-  Queue,
-  formatTimeRange,
-} from '@mr_ozio/scraper-utils'
+import { writeFile, readFile, readPage, Queue, formatDuration } from '@mr_ozio/scraper-utils'
 ```
 
 Or use extensionless subpath imports when you want a narrower surface:
 
 ```js
-import { writeFileTo } from '@mr_ozio/scraper-utils/fs/file'
+import { writeFile } from '@mr_ozio/scraper-utils/fs/file'
 import { averageOf } from '@mr_ozio/scraper-utils/helpers/calculateAverage'
 import { Queue } from '@mr_ozio/scraper-utils/classes/Queue'
 ```
@@ -37,14 +31,14 @@ import { Queue } from '@mr_ozio/scraper-utils/classes/Queue'
 Write a file with a named destination:
 
 ```js
-import { writeFileTo, readFileFrom } from '@mr_ozio/scraper-utils'
+import { writeFile, readFile } from '@mr_ozio/scraper-utils'
 
-await writeFileTo('hello', {
+await writeFile('hello', {
   to: '/tmp/greeting.txt',
   createDirectories: true,
 })
 
-const greeting = await readFileFrom({
+const greeting = await readFile({
   from: '/tmp/greeting.txt',
 })
 ```

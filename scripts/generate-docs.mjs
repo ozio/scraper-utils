@@ -20,6 +20,13 @@ const DOC_PAGES = [
   { title: 'Home', source: 'docs/HOME.md', target: 'index.html' },
   { title: 'API Style', source: 'docs/API_STYLE.md', target: 'guides/api-style.html' },
 ]
+const API_STYLE_OPTIONS = [
+  { value: 'target', label: 'Target Style' },
+  { value: 'legacy', label: 'Legacy Style' },
+  { value: 'both', label: 'Both' },
+]
+const API_STYLE_STORAGE_KEY = 'scraper-utils-docs-api-style'
+const API_STYLE_LABELS = Object.fromEntries(API_STYLE_OPTIONS.map(({ value, label }) => [value, label]))
 
 const escapeHtml = (string = '') =>
   string.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')
@@ -229,6 +236,7 @@ const parseJsdoc = (comment) => {
       since: '',
       version: '',
       date: '',
+      style: '',
     }
   }
 
@@ -245,9 +253,12 @@ const parseJsdoc = (comment) => {
   let since = ''
   let version = ''
   let date = ''
+  let style = ''
   let currentTag = null
 
   for (const line of lines) {
+    const trimmed = line.trim()
+
     if (line.startsWith('@param ')) {
       currentTag = 'param'
       const { type, rest } = parseTypedTag(line, '@param')
@@ -286,6 +297,12 @@ const parseJsdoc = (comment) => {
     if (line.startsWith('@date ')) {
       currentTag = 'date'
       date = line.replace('@date', '').trim()
+      continue
+    }
+
+    if (trimmed.startsWith('@style ')) {
+      currentTag = 'style'
+      style = trimmed.replace('@style', '').trim()
       continue
     }
 
@@ -351,6 +368,7 @@ const parseJsdoc = (comment) => {
     since,
     version,
     date,
+    style,
   }
 }
 
@@ -430,11 +448,63 @@ const hasRenderableDocs = (docs = {}) =>
       docs.date
   )
 
+const isDocumentedEntity = (docs = {}, explicitlyDocumented = false) =>
+  explicitlyDocumented ||
+  Boolean(
+    docs.description ||
+      docs.params?.length ||
+      docs.returns ||
+      docs.examples?.length ||
+      docs.since ||
+      docs.version ||
+      docs.date ||
+      docs.style
+  )
+
 const getDocumentedItemCount = (items = []) =>
   items.reduce((count, item) => {
-    const memberCount = item.members?.filter((member) => hasRenderableDocs(member.docs)).length || 0
+    const memberCount =
+      item.members?.filter((member) => isDocumentedEntity(member.docs, member.isDocumented)).length || 0
     return count + (hasRenderableDocs(item.docs) ? 1 : 0) + memberCount
   }, 0)
+
+const getMemberStyleCounts = (item) =>
+  (item.members || []).reduce(
+    (counts, member) => {
+      if (!isDocumentedEntity(member.docs, member.isDocumented)) {
+        return counts
+      }
+
+      if (member.docs.style === 'target') {
+        counts.target += 1
+      }
+
+      if (member.docs.style === 'legacy') {
+        counts.legacy += 1
+      }
+
+      return counts
+    },
+    { target: 0, legacy: 0 }
+  )
+
+const getExportStyleCounts = (item) => {
+  const memberCounts = getMemberStyleCounts(item)
+  const counts = {
+    target: memberCounts.target,
+    legacy: memberCounts.legacy,
+  }
+
+  if (item.docs?.style === 'target') {
+    counts.target += 1
+  }
+
+  if (item.docs?.style === 'legacy') {
+    counts.legacy += 1
+  }
+
+  return counts
+}
 
 const parseClassMembers = (lines, classStartIndex) => {
   const members = []
@@ -479,6 +549,7 @@ const parseClassMembers = (lines, classStartIndex) => {
         name: 'constructor',
         signature,
         docs,
+        isDocumented: Boolean(pendingComment),
       })
 
       pendingComment = null
@@ -500,6 +571,7 @@ const parseClassMembers = (lines, classStartIndex) => {
         isStatic: Boolean(staticKeyword),
         isAsync: Boolean(asyncKeyword),
         docs,
+        isDocumented: Boolean(pendingComment),
       })
 
       pendingComment = null
@@ -521,6 +593,7 @@ const parseClassMembers = (lines, classStartIndex) => {
         isStatic: Boolean(staticKeyword),
         isAsync: Boolean(asyncKeyword),
         docs,
+        isDocumented: Boolean(pendingComment),
       })
 
       pendingComment = null
@@ -539,6 +612,7 @@ const parseClassMembers = (lines, classStartIndex) => {
         signature: line.trim(),
         isStatic: Boolean(staticKeyword),
         docs,
+        isDocumented: Boolean(pendingComment),
       })
 
       pendingComment = null
@@ -601,11 +675,21 @@ const parseExports = async (relativePath) => {
 
       if (!name) continue
 
+      const docs = parseJsdoc(comment)
+
+      if (!docs.style) {
+        throw new Error(`Missing @style for export ${name} in ${relativePath}`)
+      }
+
+      if (!['target', 'legacy'].includes(docs.style)) {
+        throw new Error(`Invalid @style "${docs.style}" for export ${name} in ${relativePath}`)
+      }
+
       exports.push({
         kind: 'const',
         name,
         signature: getConstSignature(lines, index),
-        docs: parseJsdoc(comment),
+        docs,
       })
       continue
     }
@@ -617,11 +701,35 @@ const parseExports = async (relativePath) => {
 
       const { members, endIndex } = parseClassMembers(lines, index)
 
+      const docs = parseJsdoc(comment)
+
+      if (!docs.style) {
+        throw new Error(`Missing @style for export ${name} in ${relativePath}`)
+      }
+
+      if (!['target', 'legacy'].includes(docs.style)) {
+        throw new Error(`Invalid @style "${docs.style}" for export ${name} in ${relativePath}`)
+      }
+
+      for (const member of members) {
+        if (!isDocumentedEntity(member.docs, member.isDocumented)) {
+          continue
+        }
+
+        if (!member.docs.style) {
+          throw new Error(`Missing @style for member ${name}.${member.name} in ${relativePath}`)
+        }
+
+        if (!['target', 'legacy'].includes(member.docs.style)) {
+          throw new Error(`Invalid @style "${member.docs.style}" for member ${name}.${member.name} in ${relativePath}`)
+        }
+      }
+
       exports.push({
         kind: 'class',
         name,
         signature: getClassSignature(lines, index),
-        docs: parseJsdoc(comment),
+        docs,
         members,
       })
 
@@ -676,17 +784,22 @@ const THEME_STORAGE_KEY = 'scraper-utils-docs-theme'
 const THEME_BOOTSTRAP_SCRIPT = `(() => {
   const key = '${THEME_STORAGE_KEY}'
   const preference = localStorage.getItem(key) || 'system'
+  const apiStyleKey = '${API_STYLE_STORAGE_KEY}'
+  const apiStylePreference = localStorage.getItem(apiStyleKey) || 'target'
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
   const resolvedTheme = preference === 'system' ? (isDark ? 'dark' : 'light') : preference
 
   document.documentElement.dataset.theme = resolvedTheme
   document.documentElement.dataset.themePreference = preference
+  document.documentElement.dataset.apiStyleMode = apiStylePreference
 })()`
 
 const PAGE_BEHAVIOR_SCRIPT = `(() => {
   const key = '${THEME_STORAGE_KEY}'
+  const apiStyleKey = '${API_STYLE_STORAGE_KEY}'
   const root = document.documentElement
   const themeSelect = document.querySelector('[data-theme-select]')
+  const apiStyleSelect = document.querySelector('[data-api-style-select]')
   const navSearch = document.querySelector('[data-nav-search]')
   const media = window.matchMedia('(prefers-color-scheme: dark)')
 
@@ -699,6 +812,48 @@ const PAGE_BEHAVIOR_SCRIPT = `(() => {
   const syncThemeControl = () => {
     if (!themeSelect) return
     themeSelect.value = root.dataset.themePreference || 'system'
+  }
+
+  const applyApiStyleMode = (mode) => {
+    root.dataset.apiStyleMode = mode
+
+    const memberSections = document.querySelectorAll('[data-style-section-kind="member"]')
+    memberSections.forEach((section) => {
+      section.hidden = mode !== 'both' && section.dataset.styleSection !== mode
+    })
+
+    const apiCards = document.querySelectorAll('[data-target-count][data-legacy-count].api-card')
+    apiCards.forEach((card) => {
+      const targetCount = Number(card.dataset.targetCount || 0)
+      const legacyCount = Number(card.dataset.legacyCount || 0)
+      const shouldShow = mode === 'both' || (mode === 'target' ? targetCount > 0 : legacyCount > 0)
+      card.hidden = !shouldShow
+    })
+
+    const exportSections = document.querySelectorAll('[data-style-section-kind="export"]')
+    exportSections.forEach((section) => {
+      const visibleCards = [...section.querySelectorAll('.api-card')].filter((card) => !card.hidden)
+      section.hidden = visibleCards.length === 0
+    })
+
+    const moduleCards = document.querySelectorAll('[data-module-card]')
+    moduleCards.forEach((card) => {
+      const targetCount = Number(card.dataset.targetCount || 0)
+      const legacyCount = Number(card.dataset.legacyCount || 0)
+      const shouldShow = mode === 'both' || (mode === 'target' ? targetCount > 0 : legacyCount > 0)
+      card.hidden = !shouldShow
+    })
+
+    const moduleGroups = document.querySelectorAll('[data-module-group]')
+    moduleGroups.forEach((group) => {
+      const visibleCards = [...group.querySelectorAll('[data-module-card]')].filter((card) => !card.hidden)
+      group.hidden = visibleCards.length === 0
+    })
+  }
+
+  const syncApiStyleControl = () => {
+    if (!apiStyleSelect) return
+    apiStyleSelect.value = root.dataset.apiStyleMode || 'target'
   }
 
   const handleSystemThemeChange = () => {
@@ -714,6 +869,14 @@ const PAGE_BEHAVIOR_SCRIPT = `(() => {
     })
   }
 
+  if (apiStyleSelect) {
+    apiStyleSelect.addEventListener('change', (event) => {
+      const mode = event.currentTarget.value
+      localStorage.setItem(apiStyleKey, mode)
+      applyApiStyleMode(mode)
+    })
+  }
+
   if (typeof media.addEventListener === 'function') {
     media.addEventListener('change', handleSystemThemeChange)
   } else if (typeof media.addListener === 'function') {
@@ -721,6 +884,8 @@ const PAGE_BEHAVIOR_SCRIPT = `(() => {
   }
 
   syncThemeControl()
+  syncApiStyleControl()
+  applyApiStyleMode(root.dataset.apiStyleMode || 'target')
 
   const applyNavigationFilter = (query) => {
     const normalizedQuery = query.trim().toLowerCase()
@@ -789,6 +954,12 @@ const pageTemplate = ({ title, eyebrow, content, navigation, pagePath, packageIn
             <span class="nav-search-label">Search</span>
             <input class="nav-search-input" type="search" placeholder="Filter sidebar" data-nav-search />
           </label>
+          <label class="api-style-control">
+            <span class="api-style-control-label">API Style</span>
+            <select class="api-style-select" data-api-style-select>
+              ${API_STYLE_OPTIONS.map(({ value, label }) => `<option value="${value}">${label}</option>`).join('')}
+            </select>
+          </label>
           <!--
           <label class="theme-control">
             <span class="theme-control-label">Theme</span>
@@ -840,7 +1011,9 @@ const renderNavigation = (modules, currentPagePath) => {
           `<li><a class="nav-link${module.pagePath === currentPagePath ? ' is-active' : ''}" href="${toRelativeHref(
             currentPagePath,
             module.pagePath
-          )}"${module.pagePath === currentPagePath ? ' aria-current="page"' : ''}>${escapeHtml(module.fileName)}</a></li>`
+          )}"${module.pagePath === currentPagePath ? ' aria-current="page"' : ''}>${escapeHtml(
+            module.fileName
+          )}</a></li>`
       )
       .join('')
 
@@ -851,6 +1024,8 @@ const renderNavigation = (modules, currentPagePath) => {
 }
 
 const renderTypeBadge = (type) => `<span class="type-badge">${escapeHtml(type)}</span>`
+const renderStyleBadge = (style) =>
+  `<span class="style-badge style-badge-${escapeHtml(style)}">${escapeHtml(API_STYLE_LABELS[style] || style)}</span>`
 
 const renderMetaLine = ({ type = '', description = '' }) =>
   [type ? renderTypeBadge(type) : '', description ? `<span>${renderInlineMarkdown(description)}</span>` : '']
@@ -872,7 +1047,8 @@ const renderDocsMetaSection = (docs) => {
   const params = docs.params.length
     ? `<div class="meta-block"><h3>Parameters</h3><ul class="meta-list">${docs.params
         .map(
-          (param) => `<li><code>${escapeHtml(param.name)}</code><span class="meta-line">${renderMetaLine(param)}</span></li>`
+          (param) =>
+            `<li><code>${escapeHtml(param.name)}</code><span class="meta-line">${renderMetaLine(param)}</span></li>`
         )
         .join('')}</ul></div>`
     : ''
@@ -905,18 +1081,33 @@ const renderDocsMetaSection = (docs) => {
 }
 
 const renderDescription = (docs, emptyMessage = 'No description provided.') =>
-  docs.description ? `<div class="prose">${renderMarkdown(docs.description)}</div>` : `<p class="muted empty-state">${emptyMessage}</p>`
+  docs.description
+    ? `<div class="prose">${renderMarkdown(docs.description)}</div>`
+    : `<p class="muted empty-state">${emptyMessage}</p>`
+
+const renderStyleNote = (style) => {
+  if (style === 'legacy') {
+    return `<p class="style-note style-note-legacy">Legacy API. Kept for older code and not the preferred choice for new code.</p>`
+  }
+
+  if (style === 'target') {
+    return `<p class="style-note style-note-target">Target style API. Preferred for new code.</p>`
+  }
+
+  return ''
+}
 
 const renderMember = (member, ownerName) => {
   const memberId = slugify(`${ownerName}-${member.isStatic ? 'static-' : ''}${member.name}`)
   const kindLabel = [member.isStatic ? 'static' : '', member.kind].filter(Boolean).join(' ')
 
-  return `<article class="member-card" id="${memberId}">
+  return `<article class="member-card" id="${memberId}" data-style="${escapeHtml(member.docs.style)}">
     <div class="member-header">
       <div>
         <p class="api-kind">${escapeHtml(kindLabel)}</p>
         <h3 class="member-title">${escapeHtml(member.name)}</h3>
       </div>
+      ${renderStyleBadge(member.docs.style)}
       <a class="anchor" href="#${memberId}" title="Link to ${escapeHtml(member.name)}">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
       </a>
@@ -929,25 +1120,67 @@ const renderMember = (member, ownerName) => {
   </article>`
 }
 
+const renderMemberStyleSection = ({ style, members, ownerName, emptyMessage }) => `<section
+  class="member-style-section"
+  data-style-section="${style}"
+  data-style-section-kind="member"
+>
+  <div class="style-section-header">
+    <div>
+      <p class="api-kind">${escapeHtml(API_STYLE_LABELS[style])}</p>
+      <h3>${escapeHtml(API_STYLE_LABELS[style])}</h3>
+    </div>
+    <span class="badge">${members.length} members</span>
+  </div>
+  ${
+    members.length > 0
+      ? `<div class="members-grid">
+          ${members.map((member) => renderMember(member, ownerName)).join('')}
+        </div>`
+      : `<p class="muted empty-state">${escapeHtml(emptyMessage)}</p>`
+  }
+</section>`
+
 const renderExport = (item) => {
-  const members = item.kind === 'class' && item.members?.length
-    ? `<div class="class-members">
+  const documentedMembers = (item.members || []).filter((member) =>
+    isDocumentedEntity(member.docs, member.isDocumented)
+  )
+  const targetMembers = documentedMembers.filter((member) => member.docs.style === 'target')
+  const legacyMembers = documentedMembers.filter((member) => member.docs.style === 'legacy')
+  const counts = getExportStyleCounts(item)
+  const members =
+    item.kind === 'class' && documentedMembers.length
+      ? `<div class="class-members">
         <div class="class-members-header">
           <h3>Members</h3>
-          <span class="badge">${item.members.length} items</span>
+          <span class="badge">${documentedMembers.length} items</span>
         </div>
-        <div class="members-grid">
-          ${item.members.map((member) => renderMember(member, item.name)).join('')}
+        <div class="member-style-sections">
+          ${renderMemberStyleSection({
+            style: 'target',
+            members: targetMembers,
+            ownerName: item.name,
+            emptyMessage: 'No target-style members on this class.',
+          })}
+          ${renderMemberStyleSection({
+            style: 'legacy',
+            members: legacyMembers,
+            ownerName: item.name,
+            emptyMessage: 'No legacy members on this class.',
+          })}
         </div>
       </div>`
-    : ''
+      : ''
 
-  return `<article class="api-card" id="${escapeHtml(item.name)}">
+  return `<article class="api-card" id="${escapeHtml(item.name)}" data-style="${escapeHtml(
+    item.docs.style
+  )}" data-target-count="${counts.target}" data-legacy-count="${counts.legacy}">
     <div class="api-header">
       <div>
         <p class="api-kind">${escapeHtml(item.kind)}</p>
         <h2>${escapeHtml(item.name)}</h2>
       </div>
+      ${renderStyleBadge(item.docs.style)}
       <a class="anchor" href="#${escapeHtml(item.name)}" title="Link to ${escapeHtml(item.name)}">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
       </a>
@@ -959,21 +1192,50 @@ const renderExport = (item) => {
     </div>
     
     ${renderDescription(item.docs)}
+    ${renderStyleNote(item.docs.style)}
     ${renderDocsMetaSection(item.docs)}
     ${members}
   </article>`
 }
 
+const renderStyleSection = ({
+  style,
+  exports,
+  emptyMessage,
+}) => `<section class="style-section" data-style-section="${style}" data-style-section-kind="export">
+  <div class="style-section-header">
+    <div>
+      <p class="api-kind">${escapeHtml(API_STYLE_LABELS[style])}</p>
+      <h2>${escapeHtml(API_STYLE_LABELS[style])}</h2>
+    </div>
+    <span class="badge">${exports.length} exports</span>
+  </div>
+  <div class="exports-container">
+    ${
+      exports.length > 0
+        ? exports.map(renderExport).join('\n')
+        : `<p class="muted empty-state">${escapeHtml(emptyMessage)}</p>`
+    }
+  </div>
+</section>`
+
 const buildApiPages = async (modules, packageInfo) => {
   for (const module of modules) {
     const navigation = renderNavigation(modules, module.pagePath)
+    const targetExports = module.exports.filter((item) => item.docs.style === 'target')
+    const legacyExports = module.exports.filter((item) => item.docs.style === 'legacy')
     const content = `<p class="source-link">Source: <a href="#">${escapeHtml(module.relativePath)}</a></p>
-      <div class="exports-container">
-        ${
-          module.exports.length > 0
-            ? module.exports.map(renderExport).join('\n')
-            : '<p class="muted empty-state">No exported symbols found.</p>'
-        }
+      <div class="style-sections">
+        ${renderStyleSection({
+          style: 'target',
+          exports: targetExports,
+          emptyMessage: 'No target-style exports in this module.',
+        })}
+        ${renderStyleSection({
+          style: 'legacy',
+          exports: legacyExports,
+          emptyMessage: 'No legacy exports in this module.',
+        })}
       </div>`
 
     const html = pageTemplate({
@@ -1015,40 +1277,57 @@ const buildHomePage = async (modules, packageInfo) => {
   const source = await fs.readFile(path.join(ROOT, 'docs/HOME.md'), 'utf-8')
   const navigation = renderNavigation(modules, 'index.html')
   const documentedApiCount = modules.reduce((count, module) => count + getDocumentedItemCount(module.exports), 0)
+  const targetExportCount = modules.reduce((count, module) => {
+    return count + module.exports.reduce((moduleCount, item) => moduleCount + getExportStyleCounts(item).target, 0)
+  }, 0)
+  const legacyExportCount = modules.reduce((count, module) => {
+    return count + module.exports.reduce((moduleCount, item) => moduleCount + getExportStyleCounts(item).legacy, 0)
+  }, 0)
   const groups = SOURCE_GROUPS.map((group) => {
     const items = modules.filter((module) => module.group.dir === group.dir)
 
-    return `<section class="module-group">
+    return `<section class="module-group" data-module-group>
       <div class="group-heading">
         <h2>${escapeHtml(group.title)}</h2>
         <span class="badge">${items.length} modules</span>
       </div>
       <div class="module-grid">
         ${items
-          .map(
-            (module) => `<a class="module-card" href="${module.pagePath}">
+          .map((module) => {
+            const targetCount = module.exports.reduce((count, item) => count + getExportStyleCounts(item).target, 0)
+            const legacyCount = module.exports.reduce((count, item) => count + getExportStyleCounts(item).legacy, 0)
+
+            return `<a class="module-card" href="${
+              module.pagePath
+            }" data-module-card data-target-count="${targetCount}" data-legacy-count="${legacyCount}">
               <div class="module-card-header">
                 <span class="module-file">${escapeHtml(module.fileName)}</span>
+              </div>
+              <div class="module-style-pills">
+                <span class="style-badge style-badge-target">${targetCount} target</span>
+                <span class="style-badge style-badge-legacy">${legacyCount} legacy</span>
               </div>
               <div class="module-entities">
                 ${module.exports.map((item) => `<span class="module-entity">${escapeHtml(item.name)}</span>`).join('')}
               </div>
             </a>`
-          )
+          })
           .join('')}
       </div>
     </section>`
   }).join('')
 
   const content = `<div class="prose">${renderMarkdown(
-      stripLeadingTitle({ from: source, matching: 'Scraper Utils' })
-    )}</div>
+    stripLeadingTitle({ from: source, matching: 'Scraper Utils' })
+  )}</div>
     <section class="summary-grid mt-large">
       <article class="stat-card"><span>${modules.length}</span><p>Modules Indexed</p></article>
       <article class="stat-card"><span>${modules.reduce(
         (count, module) => count + module.exports.length,
         0
       )}</span><p>Total Exports</p></article>
+      <article class="stat-card"><span>${targetExportCount}</span><p>Target Style Exports</p></article>
+      <article class="stat-card"><span>${legacyExportCount}</span><p>Legacy Style Exports</p></article>
       <article class="stat-card"><span>${documentedApiCount}</span><p>Documented APIs</p></article>
     </section>
     <div class="groups-container">
@@ -1270,7 +1549,21 @@ h3 {
   margin-bottom: 28px;
 }
 
+.api-style-control {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
 .theme-control-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-light);
+}
+
+.api-style-control-label {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -1287,6 +1580,22 @@ h3 {
   padding: 9px 12px;
   font: inherit;
   box-shadow: var(--shadow-sm);
+}
+
+.api-style-select {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--surface-solid);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 9px 12px;
+  font: inherit;
+  box-shadow: var(--shadow-sm);
+}
+
+.api-style-select:focus {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 2px;
 }
 
 .theme-select:focus {
@@ -1538,6 +1847,13 @@ pre code {
   margin-top: 16px;
 }
 
+.module-style-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
 .module-entity {
   display: inline-flex;
   align-items: center;
@@ -1568,6 +1884,25 @@ pre code {
   gap: 24px;
 }
 
+.style-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.style-section {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.style-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+
 .api-card {
   padding: 32px;
   background: var(--surface-solid);
@@ -1587,6 +1922,18 @@ pre code {
   align-items: center;
   gap: 12px;
   margin-bottom: 18px;
+}
+
+.member-style-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.member-style-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .members-grid {
@@ -1626,6 +1973,7 @@ pre code {
   align-items: flex-start;
   gap: 16px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .api-kind {
@@ -1684,6 +2032,42 @@ pre code {
   color: var(--accent);
   font-size: 12px;
   font-weight: 600;
+}
+
+.style-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.style-badge-target {
+  background: rgba(40, 167, 69, 0.12);
+  color: #1f7a36;
+}
+
+.style-badge-legacy {
+  background: rgba(255, 159, 10, 0.14);
+  color: #a85d00;
+}
+
+:root[data-theme='dark'] .style-badge-target {
+  background: rgba(69, 201, 111, 0.18);
+  color: #8ce99a;
+}
+
+:root[data-theme='dark'] .style-badge-legacy {
+  background: rgba(255, 179, 64, 0.2);
+  color: #ffd08a;
+}
+
+.style-note {
+  margin: 18px 0 0;
+  font-size: 14px;
+  color: var(--muted);
 }
 
 .meta-list {
@@ -1772,6 +2156,7 @@ export {
   buildDocs,
   getDocumentedItemCount,
   parseClassMembers,
+  parseExports,
   parseJsdoc,
   renderExport,
   renderNavigation,
