@@ -52,4 +52,4 @@ goto(url, proxy)
 
 The site is built with `npm run docs:build`.
 
-On GitHub, the `docs` workflow publishes the generated `site/` directory to GitHub Pages on every push to `master`.
+On GitHub, the `version` workflow bumps `package.json`, pushes that commit, and then the `docs` workflow publishes the generated `site/` directory to GitHub Pages from the bumped version state.
