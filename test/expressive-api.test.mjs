@@ -7,6 +7,7 @@ import {
   copyFile,
   ensureDirectory,
   fileExists,
+  fileExistsAt,
   fileSize,
   listFiles,
   moveFile,
@@ -41,7 +42,7 @@ describe('expressive api', () => {
     })
 
     expect(await readFile({ from: filePath })).toBe('hello')
-    expect(await fileExists({ at: filePath })).toBe(true)
+    expect(await fileExistsAt(filePath)).toBe(true)
     expect(await fileSize({ at: filePath })).toBe(5)
   })
 
@@ -63,7 +64,7 @@ describe('expressive api', () => {
     })
 
     expect(await readFile({ from: sourcePath })).toBe('robot')
-    expect(await fileExists({ at: copyPath })).toBe(false)
+    expect(await fileExistsAt(copyPath)).toBe(false)
     expect(await readFile({ from: movedPath })).toBe('robot')
   })
 
@@ -79,9 +80,10 @@ describe('expressive api', () => {
     expect((await listFiles({ in: directoryPath })).sort()).toEqual([alphaPath, betaPath])
 
     await removeFile({ at: alphaPath })
-    expect(await fileExists({ at: alphaPath })).toBe(false)
+    expect(await fileExistsAt(alphaPath)).toBe(false)
 
     await removeDirectory({ at: directoryPath })
+    expect(await fileExistsAt(betaPath)).toBe(false)
     expect(await fileExists({ at: betaPath })).toBe(false)
   })
 

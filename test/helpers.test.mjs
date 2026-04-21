@@ -12,6 +12,7 @@ import { objectToMap, mapFrom } from '../helpers/objectToMap.mjs'
 import { pickRandom } from '../helpers/randomEl.mjs'
 import { plural, pluralize } from '../helpers/plural.mjs'
 import { shuffled } from '../helpers/shuffleArray.mjs'
+import { hashStably, stableStringify } from '../helpers/stableStringify.mjs'
 import { readStreamAsString } from '../helpers/streamToString.mjs'
 import { invertMap, switchKeyValue } from '../helpers/switchKeyValue.mjs'
 import { percentOf, toPercents } from '../helpers/toPercents.mjs'
@@ -120,6 +121,14 @@ describe('helpers', () => {
 
   test('hashOf matches dedicated hash helpers', () => {
     expect(hashOf('hello', { using: 'sha256' })).toBe(generateHashSHA256('hello'))
+  })
+
+  test('stableStringify and hashStably stay deterministic across object key order', () => {
+    const left = { b: 2, a: 1, nested: { d: 4, c: 3 } }
+    const right = { nested: { c: 3, d: 4 }, a: 1, b: 2 }
+
+    expect(stableStringify(left)).toBe(stableStringify(right))
+    expect(hashStably(left)).toBe(hashStably(right))
   })
 
   test('pickRandom and shuffled expose more readable random helpers', () => {

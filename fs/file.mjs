@@ -76,20 +76,32 @@ export const listFiles = async ({ in: dirPath }) => {
 }
 
 /**
- * Checks whether a file exists.
+ * Checks whether a file exists at a path.
  *
- * @param {{ at: string }} options
+ * @param {string} filePath
  * @returns {Promise<boolean>}
+ *
+ * @example
+ * const exists = await fileExistsAt('/tmp/greeting.txt')
  * @style target
  */
-export const fileExists = async ({ at }) => {
+export const fileExistsAt = async (filePath) => {
   try {
-    await fs.access(at)
+    await fs.access(filePath)
     return true
   } catch (e) {
     return false
   }
 }
+
+/**
+ * Checks whether a file exists.
+ *
+ * @param {{ at: string }} options
+ * @returns {Promise<boolean>}
+ * @style legacy
+ */
+export const fileExists = async ({ at }) => fileExistsAt(at)
 
 /**
  * Writes file contents to a path.
